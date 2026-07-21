@@ -8,6 +8,7 @@ from app.database import get_session
 from app.models.items import Item
 from app.models.spells import Spell
 from app.models.spells import CharacterSpellLink
+from app.services.spell_service import validate_spell_learning
 
 # Explizites Output-Schema zur sicheren Serialisierung von Relationen
 class CharacterReadWithRelations(SQLModel):
@@ -87,10 +88,29 @@ async def character_learn_spell(
     db: AsyncSession = Depends(get_session)
 ):
     """
-    Verknüpft einen Charakter mit einem Zauberspruch über die N:M-Link-Tabelle.
+    Verknüpft einen Charakter mit einem Zauberspruch über die N:M-Link-Tabelle,
+    nachdem alle D&D-Regeln im Service geprüft wurden.
     """
+    statement = (
+        select(Character)
+        .where(Character.id == character_id)
+        .options(selectinload(Character.spells))
+    )
+    result = await db.exec(statement)
+    db_character = result.first()
+
+    db_spell = await db.get(Spell, spell_id)
+
+    if not db_character or not db_spell:
+        raise HTTPException(status_code=404, detail="Charakter oder Zauberspruch nicht gefunden.")
+    
+    try:
+        validate_spell_learning(db_character, db_spell)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
     new_link = CharacterSpellLink(character_id=character_id, spell_id=spell_id)
     db.add(new_link)
     await db.commit()
 
-    return {"message": f"Charactrer {character_id} hat Zauberspruch {spell_id} erfolgreich gelernt!"}
+    return {"message": f"Character {character_id} hat Zauberspruch {spell_id} erfolgreich gelernt!"}

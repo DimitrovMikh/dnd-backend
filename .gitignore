@@ -1,0 +1,25 @@
+# Byte-compiled / Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Lokale Datenbanken
+*.db
+*.sqlite3
+
+# Environment & Secrets
+.env
+.env.local
+
+# IDE / Editor Settings
+.vscode/
+.idea/
+
+# OS spezifische Dateien
+.DS_Store
+Thumbs.db

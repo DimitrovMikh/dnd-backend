@@ -6,7 +6,7 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 
 ## 🛠️ Tech Stack & Werkzeuge
 
-* **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python 3.11+)
+* **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python 3.12+)
 * **ORM & Validierung:** [SQLModel](https://sqlmodel.tiangolo.com/) (Kombination aus SQLAlchemy 2.0 & Pydantic)
 * **Asynchrone Datenbank:** [SQLite](https://www.sqlite.org/) via `aiosqlite` & `AsyncSession`
 * **ASGI Server:** Uvicorn

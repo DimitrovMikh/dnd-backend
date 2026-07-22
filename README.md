@@ -17,6 +17,8 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 
 * **Asynchrone Datenbank-Architektur:** Vollständig asynchrone DB-Zugriffe via `AsyncSession` für hohe Performance und Skalierbarkeit.
 * **Eager Loading via `selectinload`:** Vermeidung von N+1-Problemen und Asynchronous Lazy Loading Errors beim Abfragen von Relationen (`items` & `spells`).
+* **Service Layer & Domain Logic:** Entkopplung der Business-Logik (D&D-Regeln) vom API-Router in dedizierte Service-Module (`app/services/`).
+* **Custom Domain Exceptions & Global Handler:** Strukturierte Fehlerbehandlung über eine benutzerdefinierte Exception-Hierarchie (`DNDGameException`), die von einem zentralen FastAPI Exception Handler in einheitliche JSON-Fehlermeldungen übersetzt wird.
 * **Modulare Architektur (Separation of Concerns):** Strikte Trennung zwischen API-Routern (`app/api/`) und Datenmodellen (`app/models/`).
 * **Circular Import Defense:** Nutzung von Pythons `TYPE_CHECKING` und entkoppelten Pydantic-Response-Schemas zur Vermeidung von zirkulären Importabhängigkeiten zur Laufzeit.
 
@@ -26,19 +28,23 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 
 ```text
 DND-BACKEND/
-├── .gitignore              # Ausschluss lokaler Laufzeit-Dateien & DBs
-├── README.md               # Dokumentation
+├── .gitignore               # Ausschluss lokaler Laufzeit-Dateien & DBs
+├── README.md                # Dokumentation
 └── app/
-    ├── api/                # FastAPI Router (Endpoints)
-    │   ├── characters.py   # Router für Charaktere & Lern-Logik
-    │   ├── items.py        # Router für Inventar-Gegenstände
-    │   └── spells.py       # Router für Zaubersprüche
-    ├── models/             # SQLModel / Pydantic Datenmodelle
-    │   ├── characters.py   # Character-Modelle & Stat-Validation
-    │   ├── items.py        # Item-Modelle & Enums (ItemRarity)
-    │   └── spells.py       # Spell-Modelle, Enums & Link-Tabelle
-    ├── database.py         # Async Engine & Session Dependency Injector
-    └── main.py             # App-Einstiegspunkt & Lifespan Handler
+    ├── api/                 # FastAPI Router (Endpoints)
+    │   ├── characters.py    # Router für Charaktere & Lern-Logik
+    │   ├── items.py         # Router für Inventar-Gegenstände
+    │   └── spells.py        # Router für Zaubersprüche
+    ├── core/                # Anwendungsweite Kern-Komponenten
+    │   └── exceptions.py    # Custom Domain Exceptions (DNDGameException)
+    ├── models/              # SQLModel / Pydantic Datenmodelle
+    │   ├── characters.py    # Character-Modelle & Stat-Validation
+    │   ├── items.py         # Item-Modelle & Enums (ItemRarity)
+    │   └── spells.py        # Spell-Modelle, Enums & Link-Tabelle
+    ├── services/            # Business Logic & Service Layer
+    │   └── spell_service.py # D&D-Regelprüfungen (Level & Duplikate)
+    ├── database.py          # Async Engine & Session Dependency Injector
+    └── main.py              # App-Einstiegspunkt & Global Exception Handler
 ```
 
 ---
@@ -85,7 +91,8 @@ uvicorn app.main:app --reload
 ## 🛣️ Roadmap / Anstehende Erweiterungen (Phase 2)
 
 - [x] Modulares Grundgerüst & Eager Loading für Relationen
-- [ ] **Business Logic Validation:** Level-Regelprüfung (Charakter-Level vs. Spell-Level) vor dem Lernen
-- [ ] **Database Integrity:** `UniqueConstraint` auf der Link-Tabelle gegen doppelt gelernte Zauber
-- [ ] **Custom Domain Exceptions:** Zentrale Fehlerbehandlung für D&D-Regelverstöße
+- [x] **Business Logic Validation:** Level-Regelprüfung (Charakter-Level vs. Spell-Level) vor dem Lernen
+- [x] **Database Integrity:** `UniqueConstraint` auf der Link-Tabelle gegen doppelt gelernte Zauber
+- [x] **Custom Domain Exceptions:** Zentrale Fehlerbehandlung für D&D-Regelverstöße
+- [x] **Service Layer Pattern:** Isolierte Fachlogik entkoppelt von der Transport-Schicht
 - [ ] **Automated Testing:** Integrationstests mit `pytest` und In-Memory Test-Datenbank

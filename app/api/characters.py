@@ -104,10 +104,7 @@ async def character_learn_spell(
     if not db_character or not db_spell:
         raise HTTPException(status_code=404, detail="Charakter oder Zauberspruch nicht gefunden.")
     
-    try:
-        validate_spell_learning(db_character, db_spell)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    validate_spell_learning(db_character, db_spell)
     
     new_link = CharacterSpellLink(character_id=character_id, spell_id=spell_id)
     db.add(new_link)

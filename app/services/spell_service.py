@@ -14,7 +14,7 @@ def validate_spell_learning(character: Character, spell: Spell) -> None:
         SpellAlreadyKnownError: Wenn der Zauberspruch bereits gelernt wurde.
         SpellLevelTooLowError: Wenn das Zauber-Level höher als das Charakter-Level ist.
     """
-    if spell in character.spells:
+    if any(s.id == spell.id for s in character.spells):
         raise SpellAlreadyKnownError(spell_name=spell.name)
 
     if spell.lvl > character.lvl:

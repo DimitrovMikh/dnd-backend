@@ -1,16 +1,26 @@
-from sqlalchemy.ext.asyncio import create_async_engine
+from typing import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-# Asynchroner SQLite Treiber (aiosqlite)
-DATABASE_URL = "sqlite+aiosqlite:///./database.db"
+# Relativer Pfad zur SQLite-Datenbank im Projektstamm
+DATABASE_URL = "sqlite+aiosqlite:///./dnd.db"
 
-# Echo=True loggt alle generierten SQL-Statements in die Konsole (hilfreich beim Debuggen)
+# Engine mit Logging für SQL-Queries
 engine = create_async_engine(DATABASE_URL, echo=True)
 
-async def get_session():
-    """
-    FastAPI Dependency Injector: Stellt eine asynchrone Datenbank-Session bereit 
+# Session Factory: expire_on_commit=False verhindert Detached-Instance-Fehler nach commits
+async_session_maker = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    """FastAPI Dependency Injector: Stellt eine asynchrone Datenbank-Session bereit 
     und schließt diese nach dem Request automatisch (yield pattern).
     """
-    async with AsyncSession(engine) as session:
+
+    async with async_session_maker() as session:
         yield session

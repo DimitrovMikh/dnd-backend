@@ -1,8 +1,8 @@
-"""
-Integrationstests für die Character-Endpoints.
+"""Integrationstests für die Character-Endpoints.
 Prüft die API-Routen, D&D-Regelvalidierungen und Fehlermeldungen.
 """
 import pytest
+
 from app.models.characters import Character
 from app.models.spells import Spell
 
@@ -14,7 +14,12 @@ async def test_learn_spell_level_too_low(client, async_session):
         name="Mage Azun",
         character_class="Wizzard",
         lvl=1,
-        stat_str=8, stat_dex=14, stat_con=12, stat_int=16, stat_wis=10, stat_cha=12
+        stat_str=8,
+        stat_dex=14,
+        stat_con=12,
+        stat_int=16,
+        stat_wis=10,
+        stat_cha=12
     )
     spell = Spell(name="Wunsch", lvl=9, school="verwandlung")
 
@@ -32,6 +37,7 @@ async def test_learn_spell_level_too_low(client, async_session):
     data = response.json()
     assert data["error_code"] == "SPELL_LEVEL_TOO_LOW"
 
+
 @pytest.mark.asyncio
 async def test_learn_spell_success(client, async_session):
     """Prüft das erfolgreiche Erlernen eines Zauberspruchs inkl. Datenbankverknüpfung."""
@@ -40,7 +46,12 @@ async def test_learn_spell_success(client, async_session):
         name="Mage Belix",
         character_class="Wizzard",
         lvl=5,
-        stat_str=8, stat_dex=14, stat_con=12, stat_int=18, stat_wis=10, stat_cha=12
+        stat_str=8,
+        stat_dex=14,
+        stat_con=12,
+        stat_int=18,
+        stat_wis=10,
+        stat_cha=12
     )
     spell = Spell(name="Licht", lvl=1, school="verwandlung")
 
@@ -60,6 +71,7 @@ async def test_learn_spell_success(client, async_session):
     await async_session.refresh(character, ["spells"])
     assert spell in character.spells
 
+
 @pytest.mark.asyncio
 async def test_learn_spell_already_known(client, async_session):
     """Prüft, ob ein Fehler (HTTP 400) geworfen wird, wenn ein Zauberspruch doppelt gelernt wird."""
@@ -68,7 +80,12 @@ async def test_learn_spell_already_known(client, async_session):
         name="Mage Carl",
         character_class="Wizzard",
         lvl=1,
-        stat_str=12, stat_dex=14, stat_con=8, stat_int=16, stat_wis=10, stat_cha=12
+        stat_str=12,
+        stat_dex=14,
+        stat_con=8,
+        stat_int=16,
+        stat_wis=10,
+        stat_cha=12
     )
     spell = Spell(name="Licht", lvl=1, school="verwandlung")
 

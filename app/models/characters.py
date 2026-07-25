@@ -1,5 +1,6 @@
-from typing import Optional, List, TYPE_CHECKING
-from sqlmodel import SQLModel, Field, Relationship
+from typing import TYPE_CHECKING, List, Optional 
+
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.spells import CharacterSpellLink
 
@@ -9,11 +10,12 @@ if TYPE_CHECKING:
     from app.models.items import Item
     from app.models.spells import Spell
 
+
 class CharacterBase(SQLModel):
-    """
-    Gemeinsames Basis-Schema für D&D-Charaktere.
+    """Gemeinsames Basis-Schema für D&D-Charaktere.
     Enthält alle Attribute, die sowohl beim Erstellen als auch beim Lesen benötigt werden.
     """
+
     name: str
     character_class: str
     lvl: int = Field(default=1, ge=1)
@@ -24,15 +26,21 @@ class CharacterBase(SQLModel):
     stat_wis: int = Field(default=1, ge=1)
     stat_cha: int = Field(default=1, ge=1)
 
+
 class Character(CharacterBase, table=True):
-    """
-    Haupt-Datenbankmodell für Charaktere.
+    """Haupt-Datenbankmodell für Charaktere.
     Verknüpft Inventar-Items (1:N) und Zaubersprüche (N:M via Link-Tabelle).
     """
+
     id: Optional[int] = Field(default=None, primary_key=True)
     items: List["Item"] = Relationship(back_populates="character")
-    spells: List["Spell"] = Relationship(back_populates="character", link_model=CharacterSpellLink)
+    spells: List["Spell"] = Relationship(
+        back_populates="characters",
+        link_model=CharacterSpellLink
+    )
+
 
 class CharacterCreate(CharacterBase):
     """Pydantic-Schema für eingehende POST-Requests zur Erstellung eines Charakters."""
+
     pass 

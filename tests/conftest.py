@@ -1,24 +1,25 @@
-"""
-Pytest-Konfiguration und globale Async-Fixtures.
+"""Pytest-Konfiguration und globale Async-Fixtures.
 Stellt eine In-Memory-SQLite-Datenbank und einen Test-Client bereit.
 """
+from typing import AsyncGenerator
+
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from httpx import AsyncClient, ASGITransport
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
-from httpx import AsyncClient, ASGITransport
 
-from app.main import app
 from app.database import get_session
+from app.main import app
 
 # In-Memory SQLite URL für isolierte, blitzschnelle Tests im RAM
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
+
 @pytest_asyncio.fixture
-async def async_session():
-    """
-    Erstellt vor jedem Test frische Tabellen im Arbeitsspeicher
+async def async_session() -> AsyncGenerator[AsyncSession, None]:
+    """Erstellt vor jedem Test frische Tabellen im Arbeitsspeicher
     und löscht sie nach Ausführung des Tests wieder (Teardown).
     """
     engine = create_async_engine(TEST_DATABASE_URL, echo=False)
@@ -40,10 +41,12 @@ async def async_session():
 
     await engine.dispose()
 
+
 @pytest_asyncio.fixture
-async def client(async_session: AsyncSession):
-    """
-    Erstellt einen httpx AsyncClient und überschreibt die get_session-Dependency
+async def client(
+    async_session: AsyncSession
+) -> AsyncGenerator[AsyncClient, None]:
+    """Erstellt einen httpx AsyncClient und überschreibt die get_session-Dependency
     von FastAPI mit der aktuellen Test-Session.
     """
     async def get_test_session():
@@ -56,8 +59,7 @@ async def client(async_session: AsyncSession):
 
     # HTTP-Client an das FastAPI-App-Objekt binden
     async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
 

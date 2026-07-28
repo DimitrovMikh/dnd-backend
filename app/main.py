@@ -1,3 +1,6 @@
+"""Haupt-Einstiegspunkt der FastAPI-Anwendung.
+Registriert Middleware, Exception-Handler, Lifespan-Hooks und API-Router.
+"""
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -5,25 +8,17 @@ from fastapi.responses import JSONResponse
 from sqlmodel import SQLModel
 
 from app.core.exceptions import DNDGameException
-from app.database import engine
 from app.api.characters import router as characters_router
 from app.api.items import router as items_router
 from app.api.spells import router as spells_router
-
-# Importieren der Modelle, damit SQLModel die Tabellenstruktur für create_all kennt
-import app.models.characters    # noqa: F401
-import app.models.items         # noqa: F401
-import app.models.spells        # noqa: F401
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan-Handler für Anwendungs-Start und -Stopp.
-    Erstellt beim Serverstart automatisch alle Datenbank-Tabellen, falls sie fehlen.
+    Dient als Hook für Start- und Aufräumarbeiten der Anwendung.
     """
 
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
     yield
 
 

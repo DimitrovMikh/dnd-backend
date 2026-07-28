@@ -6,10 +6,15 @@ __pycache__/
 # Virtual Environment
 .venv/
 venv/
+env/
 ENV/
+
+# Testing
+.pytest_cache/
 
 # Lokale Datenbanken
 *.db
+*.sqlite
 *.sqlite3
 
 # Environment & Secrets
@@ -23,3 +28,7 @@ ENV/
 # OS spezifische Dateien
 .DS_Store
 Thumbs.db
+
+# Alembic
+!alembic/
+!alembic/versions/

@@ -8,6 +8,7 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 
 * **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python 3.12+)
 * **ORM & Validierung:** [SQLModel](https://sqlmodel.tiangolo.com/) (Kombination aus SQLAlchemy 2.0 & Pydantic)
+* **Datenbank-Migrationen:** [Alembic](https://alembic.sqlalchemy.org/)
 * **Asynchrone Datenbank:** [SQLite](https://www.sqlite.org/) via `aiosqlite` & `AsyncSession`
 * **Automated Testing:** `pytest`, `pytest-asyncio` & `httpx`
 * **ASGI Server:** Uvicorn
@@ -17,6 +18,7 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 ## 🚀 Key Features & Highlights
 
 * **Asynchrone Datenbank-Architektur:** Vollständig asynchrone DB-Zugriffe via `AsyncSession` für hohe Performance und Skalierbarkeit.
+* **Schema-Migrationen via Alembic:** Nahtlose Versionierung von Datenbank-Strukturänderungen ohne Datenverlust, vorbereitet für Cloud-Deployments und PostgreSQL.
 * **Automatisierte Test-Suite (In-Memory DB):** Vollständige Integrationstests mit `pytest-asyncio` über eine temporäre SQLite-In-Memory-Datenbank (`:memory:`) und FastAPI Dependency Overrides.
 * **Eager Loading via `selectinload`:** Vermeidung von N+1-Problemen und Asynchronous Lazy Loading Errors beim Abfragen von Relationen (`items` & `spells`).
 * **Service Layer & Domain Logic:** Entkopplung der Business-Logik (D&D-Regeln) vom API-Router in dedizierte Service-Module (`app/services/`).
@@ -30,7 +32,12 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 
 ```text
 DND-BACKEND/
+├── alembic/                 # Alembic Migrations-Ordner
+│   ├── versions/            # Versionierte Migrations-Skripte
+│   ├── env.py               # Async Migrations-Konfiguration & Model-Importe
+│   └── script.py.mako       # Jinja-Template für neue Migrationen
 ├── .gitignore               # Ausschluss lokaler Laufzeit-Dateien & DBs
+├── alembic.ini              # Hauptkonfiguration für DB-Migrationen
 ├── README.md                # Dokumentation
 ├── app/
 │   ├── api/                 # FastAPI Router (Endpoints)
@@ -66,17 +73,22 @@ python -m venv .venv
 source .venv/bin/activate  # Unter Windows: .venv\Scripts\activate
 
 # Packages installieren
-pip install fastapi sqlmodel uvicorn aiosqlite pytest pytest-asyncio httpx
+pip install fastapi sqlmodel uvicorn aiosqlite alembic pytest pytest-asyncio httpx
 ```
 
-### 2. Server starten
+### 2. Datenbank-Migrationen ausführen
+```bash
+alembic upgrade head
+```
+
+### 3. Server starten
 ```bash
 uvicorn app.main:app --reload
 ```
 * **API Endpunkt:** `[http://127.0.0.1:8000](http://127.0.0.1:8000)`
 * **Interaktive Swagger-Dokumentation:** `[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)`
 
-### 3. Automatisierte Tests ausführen
+### 4. Automatisierte Tests ausführen
 ```bash
 pytest
 ```
@@ -106,5 +118,5 @@ pytest
 - [x] **Custom Domain Exceptions:** Zentrale Fehlerbehandlung für D&D-Regelverstöße
 - [x] **Service Layer Pattern:** Isolierte Fachlogik entkoppelt von der Transport-Schicht
 - [x] **Automated Testing:** Integrationstests mit `pytest` und In-Memory Test-Datenbank
-- [ ] **Alembic Database Migrations:** Schema-Änderungen sauber verwalten und versionieren
+- [x] **Alembic Database Migrations:** Schema-Änderungen sauber verwalten und versionieren
 - [ ] **Authentication & Security:** JWT-Token basierte Benutzerverwaltung

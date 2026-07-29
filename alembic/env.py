@@ -15,6 +15,7 @@ from sqlmodel import SQLModel
 from app.models.characters import Character  # noqa: F401
 from app.models.items import Item  # noqa: F401
 from app.models.spells import CharacterSpellLink, Spell  # noqa: F401
+from app.models.users import User # noqa: F401
 
 config = context.config
 

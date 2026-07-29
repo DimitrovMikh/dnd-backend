@@ -8,9 +8,10 @@ from fastapi.responses import JSONResponse
 from sqlmodel import SQLModel
 
 from app.core.exceptions import DNDGameException
-from app.api.characters import router as characters_router
-from app.api.items import router as items_router
-from app.api.spells import router as spells_router
+from app.api.v1.characters import router as characters_router
+from app.api.v1.items import router as items_router
+from app.api.v1.spells import router as spells_router
+from app.api.v1.auth import router as auth_router
 
 
 @asynccontextmanager
@@ -44,6 +45,7 @@ async def dnd_game_exception_handler(request: Request, exc: DNDGameException):
 app.include_router(characters_router, prefix="/characters", tags=["Characters"])
 app.include_router(items_router, prefix="/items", tags=["Items"])
 app.include_router(spells_router, prefix="/spells", tags=["Spells"])
+app.include_router(auth_router)
 
 
 @app.get("/", tags=["Health"])

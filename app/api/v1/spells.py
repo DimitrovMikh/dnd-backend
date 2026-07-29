@@ -7,10 +7,16 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.security import RoleChecker
 from app.database import get_session
 from app.models.spells import Spell, SpellCreate
+from app.models.users import User, UserRole
 
 router = APIRouter()
+
+# Instanz für DM & Admin Rechte erstellen
+allow_dm_or_admin = RoleChecker([UserRole.DUNGEON_MASTER, UserRole.ADMIN])
+
 
 @router.get("/", response_model=List[Spell])
 async def read_spells(db: AsyncSession = Depends(get_session)):
@@ -34,9 +40,13 @@ async def read_spell(spell_id: int, db: AsyncSession = Depends(get_session)):
 
 @router.post("/", response_model=Spell, status_code=status.HTTP_201_CREATED)
 async def create_spell(
-    spell: SpellCreate, db: AsyncSession = Depends(get_session)
+    spell: SpellCreate,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(allow_dm_or_admin),
 ):
-    """Erstellt einen neuen Zauberspruch in der Datenbank."""
+    """Erstellt einen neuen Zauberspruch in der Datenbank.
+    Nur für Nutzer mit den Rollen 'dungeon_master' oder 'admin'.
+    """
     db_spell = Spell.model_validate(spell)
     db.add(db_spell)
     await db.commit()

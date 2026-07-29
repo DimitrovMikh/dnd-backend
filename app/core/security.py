@@ -9,7 +9,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
-from app.models.users import User
+from app.models.users import User, UserRole
 
 # --- Konfiguration für JWT-Token-Signierung ---
 # WICHTIG: In einer Produktionsumgebung sollte der SECRET_KEY aus einer .env-Datei geladen werden.
@@ -113,3 +113,25 @@ async def get_current_user(
         )
 
     return user
+
+
+# --- ROLE-BASED ACCESS CONTROL (RBAC) DEPENDENCY ---
+
+
+class RoleChecker:
+    """FastAPI-Dependency zur Überprüfung von Benutzerrollen (RBAC)."""
+
+    def __init__(self, allowed_roles: list[UserRole]):
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, current_user: User = Depends(get_current_user)) -> User:
+        """Prüft, ob die Rolle des aktuellen Benutzers in der Liste der erlaubten Rollen enthalten ist.
+
+        :raises HTTPException: Status 403 FORBIDDEN, wenn die Rolle nicht ausreicht.
+        """
+        if current_user.role not in self.allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Zugriff verweigert: Unzureichende Berechtigungen.",
+            )
+        return current_user

@@ -7,10 +7,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.security import RoleChecker
 from app.database import get_session
 from app.models.items import Item, ItemCreate
+from app.models.users import User, UserRole
 
 router = APIRouter()
+
+# Instanz für DM & Admin Rechte erstellen
+allow_dm_or_admin = RoleChecker([UserRole.DUNGEON_MASTER, UserRole.ADMIN])
 
 
 @router.get("/", response_model=List[Item])
@@ -35,9 +40,13 @@ async def read_item(item_id: int, db: AsyncSession = Depends(get_session)):
 
 @router.post("/", response_model=Item, status_code=status.HTTP_201_CREATED)
 async def create_item(
-    item: ItemCreate, db: AsyncSession = Depends(get_session)
+    item: ItemCreate,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(allow_dm_or_admin),
 ):
-    """Erstellt ein neues Item in der Datenbank."""
+    """Erstellt ein neues Item in der Datenbank.
+    Nur für Nutzer mit den Rollen 'dungeon_master' oder 'admin'.
+    """
     db_item = Item.model_validate(item)
     db.add(db_item)
     await db.commit()

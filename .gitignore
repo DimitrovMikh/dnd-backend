@@ -22,7 +22,7 @@ ENV/
 .env.local
 
 # IDE / Editor Settings
-.vscode/
+.vscode/*
 .idea/
 
 # Projekt-Setting allowed

@@ -36,37 +36,42 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 
 ```text
 DND-BACKEND/
-├── alembic/                    # Alembic Migrations-Ordner
-│   ├── versions/               # Versionierte Migrations-Skripte
-│   ├── env.py                  # Async Migrations-Konfiguration & Model-Importe
-│   └── script.py.mako          # Jinja-Template für neue Migrationen
-├── .gitignore                  # Ausschluss lokaler Laufzeit-Dateien & DBs
-├── alembic.ini                 # Hauptkonfiguration für DB-Migrationen
-├── README.md                   # Dokumentation
-├── app/
-│   ├── api/                    # FastAPI Router (Endpoints)
-│   │   └──v1/                  # Versionierte API v1
-│   │       ├── auth.py         # Auth-Router (/register, /login, /me)
-│   │       ├── characters.py   # Router für Charaktere & Lern-Logik
-│   │       ├── items.py        # Router für Inventar-Gegenstände
-│   │       └── spells.py       # Router für Zaubersprüche
-│   ├── core/                   # Anwendungsweite Kern-Komponenten
-│   │   └── exceptions.py       # Custom Domain Exceptions (DNDGameException)
-│   │   └── security.py         # Hashing, JWT-Generierung & get_current_user Dependency
-│   ├── models/                 # SQLModel / Pydantic Datenmodelle
-│   │   ├── characters.py       # Character-Modelle & Stat-Validation
-│   │   ├── items.py            # Item-Modelle & Enums (ItemRarity)
-│   │   └── spells.py           # Spell-Modelle, Enums & Link-Tabelle
-│   │   └── users.py            # User-Modelle, Rollen-Enums & Token-DTOs
-│   ├── services/               # Business Logic & Service Layer
-│   │   └── spell_service.py    # D&D-Regelprüfungen (Level & Duplikate)
-│   ├── database.py             # Async Engine & Session Dependency Injector
-│   └── main.py                 # App-Einstiegspunkt & Global Exception Handler
-└── tests/                      # Automatisierte Integrationstests
-    ├── conftest.py             # Pytest Fixtures (In-Memory DB & Async Client)
-    ├── test_auth.py            # Integrationstests für AuthN & AuthZ
-    ├── test_characters.py      # Tests für Charakter-Endpunkte & Regelvalidierungen
-    └── test_rbac.py            # Tests für Rollenrechte (Player vs. DM)
+├── .vscode/                        # VS Code Projekt-Konfiguration (Pylance & Pytest Pfad-Mapping)
+│   └── settings.json
+├── backend/                        # 🐍 FASTAPI BACKEND SERVICE
+│   ├── alembic/                    # Alembic Migrations-Ordner
+│   │   ├── versions/               # Versionierte Migrations-Skripte
+│   │   ├── env.py                  # Async Migrations-Konfiguration & Model-Importe
+│   │   └── script.py.mako          # Jinja-Template für neue Migrationen
+│   ├── app/                        # Hauptanwendung
+│   │   ├── api/                    # FastAPI Router (Endpoints)
+│   │   │   └──v1/                  # Versionierte API v1
+│   │   │       ├── auth.py         # Auth-Router (/register, /login, /me)
+│   │   │       ├── characters.py   # Router für Charaktere & Lern-Logik
+│   │   │       ├── items.py        # Router für Inventar-Gegenstände
+│   │   │       └── spells.py       # Router für Zaubersprüche
+│   │   ├── core/                   # Anwendungsweite Kern-Komponenten
+│   │   │   └── exceptions.py       # Custom Domain Exceptions (DNDGameException)
+│   │   │   └── security.py         # Hashing, JWT-Generierung & get_current_user Dependency
+│   │   ├── models/                 # SQLModel / Pydantic Datenmodelle
+│   │   │   ├── characters.py       # Character-Modelle & Stat-Validation
+│   │   │   ├── items.py            # Item-Modelle & Enums (ItemRarity)
+│   │   │   ├── spells.py           # Spell-Modelle, Enums & Link-Tabelle
+│   │   │   └── users.py            # User-Modelle, Rollen-Enums & Token-DTOs
+│   │   ├── services/               # Business Logic & Service Layer
+│   │   │   └── spell_service.py    # D&D-Regelprüfungen (Level & Duplikate)
+│   │   ├── database.py             # Async Engine & Session Dependency Injector
+│   │   └── main.py                 # App-Einstiegspunkt & Global Exception Handler
+│   │── tests/                      # Automatisierte Integrationstests
+│   │   ├── conftest.py             # Pytest Fixtures (In-Memory DB & Async Client)
+│   │   ├── test_auth.py            # Integrationstests für AuthN & AuthZ
+│   │   ├── test_characters.py      # Tests für Charakter-Endpunkte & Regelvalidierungen
+│   │   └── test_rbac.py            # Tests für Rollenrechte (Player vs. DM)
+│   └── alembic.ini                 # Hauptkonfiguration für DB-Migrationen
+│
+├── .gitignore                      # Ausschluss lokaler Laufzeit-Dateien & DBs
+└── README.md                       # Dokumentation
+
 ```
 
 ---

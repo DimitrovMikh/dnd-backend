@@ -25,6 +25,9 @@ ENV/
 .vscode/
 .idea/
 
+# Projekt-Setting allowed
+!.vscode/settings.json
+
 # OS spezifische Dateien
 .DS_Store
 Thumbs.db

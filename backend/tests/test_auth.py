@@ -1,5 +1,7 @@
 import pytest
 
+from app.core.security import get_hash_password, verify_password, create_access_token
+
 # --- REGISTRIERUNGS-TESTS ---
 
 
@@ -168,3 +170,92 @@ async def test_read_users_me_unauthorized(client):
     """Prüft, ob der Zugriff auf geschützte Routen ohne Token mit HTTP 401 abgelehnt wird."""
     response = await client.get("/auth/me")
     assert response.status_code == 401
+
+
+# --- ARGON2 & REFRESH-TOKEN-TESTS ---
+
+
+@pytest.mark.asyncio
+async def test_argon2_password_hashing():
+    """Verifiziert, dass der PassLib-Kontext Argon2id als Hash-Algorithmus nutzt
+    und Passwörter korrekt abgeglichen werden.
+    """
+    secret_password = "MeinGeheimesD&DPassword2026!"
+    wrong_password = "FalschesPasswort123!"
+
+    # Passwort hashen
+    hashed_password = get_hash_password(secret_password)
+
+    # Assertions
+    assert hashed_password.startswith("$argon2id$")
+    assert verify_password(secret_password, hashed_password) is True
+    assert verify_password(wrong_password, hashed_password) is False
+
+
+@pytest.mark.asyncio
+async def test_refresh_token_success(client):
+    """Prüft den kompletten Refresh-Cycle: Registrierung, Login (Cookie wird gesetzt)
+    und erfolgreiche Erneuerung des Access Tokens über /auth/refresh.
+    """
+    # 1. ARRANGE: User registrieren & einloggen
+    user_data = {
+        "username": "refreshtestuser",
+        "email": "refreshtest@example.com",
+        "password": "SecurePassword123!",
+    }
+    await client.post("/auth/register", json=user_data)
+    login_res = await client.post("/auth/login", json=user_data)
+
+    # 2. ASSERT: HttpOnly-Cookie vorhanden
+    assert "refresh_token" in login_res.cookies
+
+    # 3. ACT: Cookie auf Client setzen & /auth/refresh aufrufen
+    client.cookies.update(login_res.cookies)
+    refresh_res = await client.post("/auth/refresh")
+
+    # 4. ASSERT: Neues Access Token erhalten
+    assert refresh_res.status_code == 200
+    res_json = refresh_res.json()
+    assert "access_token" in res_json
+    assert res_json["token_type"] == "bearer"
+
+
+@pytest.mark.asyncio
+async def test_refresh_token_missing_cookie(client):
+    """Prüft, ob der Aufruf von /auth/refresh ohne Cookie mit HTTP 401 abgelehnt wird."""
+    response = await client.post("/auth/refresh")
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Refresh Token fehlt."
+
+
+@pytest.mark.asyncio
+async def test_refresh_token_invalid_type(client):
+    """Prüft, ob der Versuch, ein Access Token als Refresh Cookie einzuschleusen,
+    mit HTTP 401 abgefangen wird.
+    """
+    # Access Token (type: access) als mehere Refresh Token Cookie setzen
+    access_token = create_access_token(
+        data={"sub": "fakeuser", "role": "player"}
+    )
+
+    client.cookies.update({"refresh_token": access_token})
+    response = await client.post("/auth/refresh")
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Ungültiger Token-Typ."
+
+
+@pytest.mark.asyncio
+async def test_register_user_weak_password(client):
+    """ Prüft, ob die Registrierung bei einem schwachen Passwort mit HTTP 422 abgelehnt wird."""
+    payload = {
+        "username": "weakuser",
+        "email": "weak@example.com",
+        "password": "schwach",
+    }
+
+    response = await client.post("/auth/register", json=payload)
+
+    assert response.status_code == 422
+    assert "password" in response.text

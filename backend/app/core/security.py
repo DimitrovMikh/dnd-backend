@@ -4,37 +4,34 @@ from typing import Optional
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from passlib.context import CryptContext
+from pwdlib import PasswordHash
+from pwdlib.hashers.argon2 import Argon2Hasher
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 from app.models.users import User, UserRole
+from app.core.config import settings
 
-# --- Konfiguration für JWT-Token-Signierung ---
-# WICHTIG: In einer Produktionsumgebung sollte der SECRET_KEY aus einer .env-Datei geladen werden.
-SECRET_KEY = "SUPER_SECRET_DND_KEY_CHANGE_ME_IN_PRODUCTION_12345"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # OAuth2-Schema: Liest den 'Authorization: Bearer <token>' Header aus und aktiviert den Login-Button in Swagger UI
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-# Passlib-Kontext: Nutzt Bcrypt für das sichere Hashing von Passwörtern
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Konfiguration für Argon2id Hashing
+password_hash = PasswordHash((Argon2Hasher(),))
 
 
 # --- PASSWORT HASHING & VERIFIKATION ---
 
 
-def hash_password(password: str) -> str:
-    """Wandelt ein Klartext-Passwort mithilfe von Bcrypt in einen sicheren Hash um."""
-    return pwd_context.hash(password)
+def get_hash_password(password: str) -> str:
+    """Wandelt ein Klartext-Passwort mithilfe von Argon2 in einen sicheren Hash um."""
+    return password_hash.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Prüft, ob ein eingegebenes Klartext-Passwort zum gespeicherten Hash passt."""
-    return pwd_context.verify(plain_password, hashed_password)
+    return password_hash.verify(plain_password, hashed_password)
 
 
 # --- JWT TOKEN GENERIERUNG ---
@@ -56,14 +53,37 @@ def create_access_token(
         expire = datetime.now(timezone.utc) + expire_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(
-            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
 
     # Ablaufdatum ('exp') in Payload eintragen
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": "access"})
 
     # Token mit SECRET_KEY und HS256-Algorithmus signieren
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def create_refresh_token(
+    data: dict, expire_delta: Optional[timedelta] = None
+) -> str:
+    """Erstellt ein langlebiges Refresh Token (JWT) zur Erneuerung des Access Tokens.
+
+    :param data: Dictionary mit den Payload-Daten (z. B. 'sub' für Username).
+    :param expires_delta: Optionales individuelles Ablaufdatum.
+    :return: Der signierte JWT-String.
+    """
+    to_encode = data.copy()
+
+    if expire_delta:
+        expire = datetime.now(timezone.utc) + expire_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(
+            days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+        )
+
+    to_encode.update({"exp": expire, "type": "refresh"})
+
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
 # --- AUTORISIERUNG (AuthZ) DEPENDENCY ---
@@ -87,7 +107,7 @@ async def get_current_user(
 
     try:
         # 1. JWT entschlüsseln und Signatur sowie 'exp'-Claim prüfen
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         username: str = payload.get("sub")
 
         if username is None:

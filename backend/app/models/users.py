@@ -1,6 +1,8 @@
+import re
 from enum import Enum
 from typing import Optional
 
+from pydantic import field_validator
 from sqlmodel import Field, SQLModel
 
 
@@ -43,7 +45,49 @@ class UserCreate(UserBase):
     """Pydantic-Schema für eingehende Registrierungs-Requests.
     Enthält das Passwort im Klartext vor dem Hashing.
     """
+
     password: str = Field(description="Klartext-Passwort des Benutzers")
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_complexity(cls, v: str) -> str:
+        """Validiert die Komplexität des Klartext-Passworts nach OWASP-Sicherheitsstandards.
+        
+        Prüft Länge, Groß-/Kleinbuchstaben, Zahlen und Sonderzeichen vor der Verarbeitung.
+        Wirft bei Regelverstößen einen ValueError, den FastAPI in HTTP 422 übersetzt.
+        """
+        # 1. Mindestlänge prüfen (mindestens 9 Zeichen)
+        if len(v) < 9:
+            raise ValueError(
+                "Das Passwort muss mindestens 9 Zeichen lang sein."
+            )
+
+        # 2. Mindestens ein Großbuchstabe (A-Z)
+        if not re.search(r"[A-Z]", v):
+            raise ValueError(
+                "Das Passwort muss mindestens einen Großbuchstaben enthalten."
+            )
+        
+        # 3. Mindestens ein Kleinbuchstabe (a-z)
+        if not re.search(r"[a-z]", v):
+            raise ValueError(
+                "Das Passwort muss mindestens einen Kleinbuchstaben enthalten."
+            )
+
+        # 4. Mindestens eine Zahl (0-9)
+        if not re.search(r"\d", v):
+            raise ValueError(
+                "Das Passwort muss mindestens eine Zahl enthalten."
+            )
+        
+        # 5. Mindestens ein Sonderzeichen (alles außer Alphanumerisch)
+        if not re.search("[^a-zA-Z0-9]", v):
+            raise ValueError(
+                "Das Passwort muss mindestens ein Sonderzeichen enthalten."
+            )
+
+        return v
+
 
 class UserResponse(UserBase):
     """Pydantic-Schema für API-Antworten.

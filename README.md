@@ -1,14 +1,15 @@
 # 🐉 D&D Campaign Manager API
 
-Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backend ermöglicht die Verwaltung von Charakteren, Inventar-Items und Zaubersprüchen inklusive relationaler Verknüpfungen (1:N und N:M) sowie ein vollständiges **Authentifizierungs-, Autorisierungs- und Rollensystem (JWT, Bcrypt & RBAC)**.
-
+Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backend ermöglicht die Verwaltung von Charakteren, Inventar-Items und Zaubersprüchen inklusive relationaler Verknüpfungen (1:N und N:M) sowie ein vollumfänglich gehärtetes **Authentifizierungs-, Autorisierungs- und Rollensystem (Argon2id, Dual-Token JWT mit HttpOnly Cookies, CORS Hardening, Rate Limiting & RBAC)**.
 ---
 
 ## 🛠️ Tech Stack & Werkzeuge
 
 * **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python 3.12+)
 * **ORM & Validierung:** [SQLModel](https://sqlmodel.tiangolo.com/) (Kombination aus SQLAlchemy 2.0 & Pydantic)
-* **Sicherheit & Auth:** [PyJWT](https://pyjwt.readthedocs.io/) (JWT Access Tokens) & [passlib](https://passlib.readthedocs.io/) mit `bcrypt==4.0.1`
+* **Sicherheit & Auth:** [PyJWT](https://pyjwt.readthedocs.io/) (Dual-Token: Access & Refresh JWTs) & [pwdlib](https://pwdlib.readthedocs.io/) mit `argon2-cffi` (Argon2id Password Hashing)
+* **Rate Limiting:** [slowapi](https://github.com/laurents/slowapi) (Brute-Force Protection via IP-based Limits)
+* **Konfiguration:** [Pydantic Settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) (Fail-Fast `.env` Validierung)
 * **Datenbank-Migrationen:** [Alembic](https://alembic.sqlalchemy.org/)
 * **Asynchrone Datenbank:** [SQLite](https://www.sqlite.org/) via `aiosqlite` & `AsyncSession`
 * **Automated Testing:** `pytest`, `pytest-asyncio` & `httpx`
@@ -18,17 +19,23 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 
 ## 🚀 Key Features & Highlights
 
-* **Authentifizierung & Autorisierung (AuthN/AuthZ):** Sichere Benutzerregistrierung, Login mit **JWT Access Tokens** (HS256) und Passworthashing via **Bcrypt**.
+* **Gehärtete Authentifizierung (Argon2id & Dual-Tokens):**
+  * **Passworthashing:** Sicheres Argon2id Hashing via modernem `pwdlib`-Framework (OWASP-Standard).
+  * **Passwort-Komplexität:** Pydantic Field-Validator erzwingt Mindestlänge (9 Zeichen), Groß-/Kleinbuchstaben, Zahlen und Sonderzeichen.
+  * **Access Token:** Kurzlebiges JWT (15 Minuten Gültigkeit) für API-Zugriffe im `Authorization: Bearer`-Header.
+  * **Refresh Token:** Langlebiges JWT (7 Tage Gültigkeit), geschützt in einem **`HttpOnly` Cookie** (`SameSite=lax`) gegen XSS-Angriffe.
+  * **Strict Token Typing:** Validierung der Claims (`"type": "access"` vs. `"type": "refresh"`), um Token-Missbrauch zu verhindern.
+* **Brute-Force protection & Rate Limiting:** IP-basierte Begrenzung sensitiver Endpunkte (`/auth/login` auf 5 Requests/Minute) via `slowapi` mit automatischer `HTTP 429 Too Many Requests`-Antwort.
+* **CORS Hardening:** Granulare `CORSMiddleware`-Policies mit strikter Herkunftsprüfung (`ALLOWED_ORIGINS`) und expliziter Freigabe von Credentials für HttpOnly-Cookies.
 * **Role-Based Access Control (RBAC):** Granulare Rechtevergabe über die `RoleChecker`-Dependency. Bestimmte Aktionen (z. B. Erstellen neuer Items oder Zaubersprüche) sind exklusiv Nutzern mit den Rollen `DUNGEON_MASTER` oder `ADMIN` vorbehalten.
+* **Fail-Fast Konfiguration:** Zentrale, typsichere Verwaltung aller Anwendungs- und Sicherheits-Einstellungen via `app/core/config.py` und `.env`.
 * **Geschützte Routen via Dependency Injection:** Wiederverwendbare `get_current_user`-Dependency zur Absicherung von Endpunkten über den HTTP `Authorization: Bearer <token>` Header.
 * **Asynchrone Datenbank-Architektur:** Vollständig asynchrone DB-Zugriffe via `AsyncSession` für hohe Performance und Skalierbarkeit.
-* **Schema-Migrationen via Alembic:** Nahtlose Versionierung von Datenbank-Strukturänderungen ohne Datenverlust, vorbereitet für Cloud-Deployments und PostgreSQL.
-* **Automatisierte Test-Suite (In-Memory DB):** Vollständige Integrationstests mit `pytest-asyncio` über eine temporäre SQLite-In-Memory-Datenbank (`:memory:`) und FastAPI Dependency Overrides.
-* **Eager Loading via `selectinload`:** Vermeidung von N+1-Problemen und Asynchronous Lazy Loading Errors beim Abfragen von Relationen (`items` & `spells`).
-* **Service Layer & Domain Logic:** Entkopplung der Business-Logik (D&D-Regeln) vom API-Router in dedizierte Service-Module (`app/services/`).
-* **Custom Domain Exceptions & Global Handler:** Strukturierte Fehlerbehandlung über eine benutzerdefinierte Exception-Hierarchie (`DNDGameException`), die von einem zentralen FastAPI Exception Handler in einheitliche JSON-Fehlermeldungen übersetzt wird.
-* **Modulare Architektur (Separation of Concerns):** Strikte Trennung zwischen API-Routern (`app/api/`) und Datenmodellen (`app/models/`).
-* **Circular Import Defense:** Nutzung von Pythons `TYPE_CHECKING` und entkoppelten Pydantic-Response-Schemas zur Vermeidung von zirkulären Importabhängigkeiten zur Laufzeit.
+* **Schema-Migrationen via Alembic:** Nahtlose Versionierung von Datenbank-Strukturänderungen ohne Datenverlust.
+* **Automatisierte Test-Suite:** 100 % grün durchlaufende Integrationstests (20+ Tests) mit `pytest-asyncio` über eine temporäre SQLite Test-Datenbank.
+* **Eager Loading via `selectinload`:** Vermeidung von N+1-Problemen beim Abfragen von Relationen (`items` & `spells`).
+* **Service Layer & Domain Logic:** Entkopplung der Business-Logik vom API-Router in dedizierte Service-Module (`app/services/`).
+* **Custom Domain Exceptions & Global Handler:** Strukturierte Fehlerbehandlung über eine benutzerdefinierte Exception-Hierarchie (`DNDGameException`).
 
 ---
 
@@ -36,7 +43,7 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 
 ```text
 DND-BACKEND/
-├── .vscode/                        # VS Code Projekt-Konfiguration (Pylance & Pytest Pfad-Mapping)
+├── .vscode/                        # VS Code Projekt-Konfiguration
 │   └── settings.json
 ├── backend/                        # 🐍 FASTAPI BACKEND SERVICE
 │   ├── alembic/                    # Alembic Migrations-Ordner
@@ -45,29 +52,34 @@ DND-BACKEND/
 │   │   └── script.py.mako          # Jinja-Template für neue Migrationen
 │   ├── app/                        # Hauptanwendung
 │   │   ├── api/                    # FastAPI Router (Endpoints)
-│   │   │   └──v1/                  # Versionierte API v1
-│   │   │       ├── auth.py         # Auth-Router (/register, /login, /me)
+│   │   │   └── v1/                 # Versionierte API v1
+│   │   │       ├── auth.py         # Auth-Router (/register, /login [Rate-Limited], /refresh, /me)
 │   │   │       ├── characters.py   # Router für Charaktere & Lern-Logik
 │   │   │       ├── items.py        # Router für Inventar-Gegenstände
 │   │   │       └── spells.py       # Router für Zaubersprüche
 │   │   ├── core/                   # Anwendungsweite Kern-Komponenten
-│   │   │   └── exceptions.py       # Custom Domain Exceptions (DNDGameException)
-│   │   │   └── security.py         # Hashing, JWT-Generierung & get_current_user Dependency
+│   │   │   ├── config.py           # Pydantic Settings & Env-Validierung (incl. ALLOWED_ORIGINS)
+│   │   │   ├── exceptions.py       # Custom Domain Exceptions (DNDGameException)
+│   │   │   ├── limiter.py          # Central Rate Limiter Instance (slowapi)
+│   │   │   └── security.py         # Argon2 Hashing (pwdlib), Dual-JWT & get_current_user
 │   │   ├── models/                 # SQLModel / Pydantic Datenmodelle
 │   │   │   ├── characters.py       # Character-Modelle & Stat-Validation
 │   │   │   ├── items.py            # Item-Modelle & Enums (ItemRarity)
 │   │   │   ├── spells.py           # Spell-Modelle, Enums & Link-Tabelle
-│   │   │   └── users.py            # User-Modelle, Rollen-Enums & Token-DTOs
+│   │   │   └── users.py            # User-Modelle, Rollen-Enums & Token-DTOs & Passwort-Validator
 │   │   ├── services/               # Business Logic & Service Layer
 │   │   │   └── spell_service.py    # D&D-Regelprüfungen (Level & Duplikate)
 │   │   ├── database.py             # Async Engine & Session Dependency Injector
 │   │   └── main.py                 # App-Einstiegspunkt & Global Exception Handler
-│   │── tests/                      # Automatisierte Integrationstests
-│   │   ├── conftest.py             # Pytest Fixtures (In-Memory DB & Async Client)
-│   │   ├── test_auth.py            # Integrationstests für AuthN & AuthZ
+│   ├── tests/                      # Automatisierte Integrationstests
+│   │   ├── conftest.py             # Pytest Fixtures (In-Memory DB, Async Client & Limiter Reset)
+│   │   ├── test_auth.py            # Tests für Argon2, Dual-Tokens & Auth-Routen
 │   │   ├── test_characters.py      # Tests für Charakter-Endpunkte & Regelvalidierungen
-│   │   └── test_rbac.py            # Tests für Rollenrechte (Player vs. DM)
-│   └── alembic.ini                 # Hauptkonfiguration für DB-Migrationen
+│   │   ├── test_rbac.py            # Tests für Rollenrechte (Player vs. DM)
+│   │   └── test_security.py        # Tests für CORS-Header & Rate Limiting
+│   ├── .env.example                # Muster-Datei für Umgebungsvariablen
+│   ├── alembic.ini                 # Hauptkonfiguration für DB-Migrationen
+│   └── requirements.txt            # Abgleicher aller Python-Pakete
 │
 ├── .gitignore                      # Ausschluss lokaler Laufzeit-Dateien & DBs
 └── README.md                       # Dokumentation
@@ -81,29 +93,49 @@ DND-BACKEND/
 ### 1. Repository klonen & Abhängigkeiten installieren
 ```bash
 git clone https://github.com/DimitrovMikh/dnd-backend.git
-cd dnd-backend
+cd dnd-backend/backend
 
 # Virtuelle Umgebung erstellen & aktivieren
 python -m venv .venv
 source .venv/bin/activate  # Unter Windows: .venv\Scripts\activate
 
 # Packages installieren
-pip install fastapi sqlmodel uvicorn aiosqlite alembic pytest pytest-asyncio httpx pyjwt passlib "bcrypt==4.0.1"
+pip install -r requirements.txt
 ```
 
-### 2. Datenbank-Migrationen ausführen
+### 2. Umgebungsvariablen konfigurieren
+Erstelle eine `.env`-Datei im Ordner `backend/` basierend auf der Vorlage:
+
+```bash
+cp .env.example .env
+```
+
+Stelle sicher, dass in deiner `.env` ein eigener, sicherer `SECRET_KEY` eingetragen ist:
+```env
+PROJECT_NAME="D&D Campaign Manager API"
+ENVIRONMENT="development"
+
+SECRET_KEY="HIER_DEINEN_ZUFÄLLIGEN_32_CHAR_HEX_KEY_EINTRAGEN"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+DATABASE_URL="sqlite+aiosqlite:///./dnd.db"
+```
+
+### 3. Datenbank-Migrationen ausführen
 ```bash
 alembic upgrade head
 ```
 
-### 3. Server starten
+### 4. Server starten
 ```bash
 uvicorn app.main:app --reload
 ```
-* **API Endpunkt:** `[http://127.0.0.1:8000](http://127.0.0.1:8000)`
-* **Interaktive Swagger-Dokumentation:** `[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)`
+* **API Endpunkt:** `http://127.0.0.1:8000`
+* **Interaktive Swagger-Dokumentation:** `http://127.0.0.1:8000/docs`
 
-### 4. Automatisierte Tests ausführen
+### 5. Automatisierte Tests ausführen
 ```bash
 pytest
 ```
@@ -112,19 +144,20 @@ pytest
 
 ## 📌 Wichtigste API-Endpunkte
 
-| Methode | Endpunkt | Beschreibung |
-| :--- | :--- | :--- |
-| `POST` | `/auth/register` | Einen neuen Benutzer registrieren | ❌ Öffentlich |
-| `POST` | `/auth/login` | Benutzer einloggen & JWT Access Token erhalten | ❌ Öffentlich |
+| Methode | Endpunkt | Beschreibung | Auth-Schutz / Rate Limit |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/auth/register` | Einen neuen Benutzer registrieren (OWASP Passwort-Validierung) | ❌ Öffentlich |
+| `POST` | `/auth/login` | Einloggen: Gibt Access Token zurück & setzt HttpOnly Refresh Cookie | ⏱️ 5 Req/Min (Rate Limited) |
+| `POST` | `/auth/refresh` | Liest Refresh-Cookie aus & stellt neues Access Token aus | 🍪 Cookie |
 | `GET` | `/auth/me` | Profil des aktuell eingeloggten Benutzers abrufen | 🔒 Bearer Token |
 | `GET` | `/characters/` | Alle Charaktere inkl. Items & gelernter Zaubersprüche abrufen | ❌ Öffentlich |
 | `GET` | `/characters/{id}` | Einzelnen Charakter anhand der ID abrufen | ❌ Öffentlich |
 | `POST` | `/characters/` | Einen neuen Charakter erstellen | ❌ Öffentlich |
 | `POST` | `/characters/{id}/spells/{spell_id}` | Zauberspruch für Charakter freischalten (N:M Link) | ❌ Öffentlich |
 | `GET` | `/items/` | Alle Items abrufen | ❌ Öffentlich |
-| `POST` | `/items/` | Neues Item erstellen |🔒 DM / Admin |
+| `POST` | `/items/` | Neues Item erstellen | 🔒 DM / Admin |
 | `GET` | `/spells/` | Alle Zaubersprüche abrufen | ❌ Öffentlich |
-| `POST` | `/spells/` | Neuen Zauberspruch erstellen |🔒 DM / Admin |
+| `POST` | `/spells/` | Einen neuen Zauberspruch erstellen | 🔒 DM / Admin |
 
 ---
 
@@ -144,16 +177,17 @@ pytest
 
 ---
 
-### Phase 3: Cloud, Security Hardening & Advanced Backend Architecture 🟡 (Geplant)
+### Phase 3: Cybersecurity Hardening, Containerisierung & Cloud 🟡 (In Arbeit)
 
-#### 1. 🛡️ Advanced Cybersecurity & Auth Hardening
-- [ ] **Dual-Token System (Refresh Tokens):** Implementierung von kurzlebigen Access-Tokens + langlebigen Refresh-Tokens inkl. Token-Blacklisting/Rotation.
-- [ ] **Argon2 Password Hashing:** Upgrade des Hashing-Algorithmus von Bcrypt auf **Argon2id** (OWASP-Empfehlung) via `argon2-cffi` / `pwdlib`.
-- [ ] **Secret Management & Config:** Auslagern aller Secrets und Schlüssel aus dem Code in `.env`-Dateien mit `pydantic-settings`.
-- [ ] **Rate Limiting & Brute-Force Protection:** Schutz sensitiver Endpunkte (`/auth/login`) gegen Brute-Force-Angriffe (z. B. via `slowapi` / Redis).
-- [ ] **Security Headers & CORS Hardening:** Granulare CORS-Policies und OWASP-Sicherheitsheader.
+#### 1. 🛡️ Advanced Cybersecurity & Auth Hardening 🟢 (Abgeschlossen)
+- [x] **Dual-Token System (Refresh Tokens):** Implementierung von kurzlebigen Access-Tokens + langlebigen Refresh-Tokens inkl. Token-Blacklisting/Rotation.
+- [x] **Argon2 Password Hashing:** Upgrade des Hashing-Algorithmus von Bcrypt auf **Argon2id** (OWASP-Empfehlung) via `argon2-cffi` / `pwdlib`.
+- [x] **Secret Management & Config:** Auslagern aller Secrets und Schlüssel aus dem Code in `.env`-Dateien mit `pydantic-settings`.
+- [x] **Rate Limiting & Brute-Force Protection:** Schutz sensitiver Endpunkte (`/auth/login`) gegen Brute-Force-Angriffe (z. B. via `slowapi` / Redis).
+- [x] **Security Headers & CORS Hardening:** Granulare CORS-Policies und OWASP-Sicherheitsheader.
+- [x] **Passwort-Komplexitäts-Validierung:** Pydantic Field-Validator für Mindestanforderungen bei Passwörtern.
 
-#### 2. 🐳 Containerisierung & Datenbank-Upgrade (Docker & PostgreSQL)
+#### 2. 🐳 Containerisierung & Datenbank-Upgrade (Docker & PostgreSQL) 🟡 (Nächster Schritt)
 - [ ] **Multi-Stage Dockerfile:** Erstellung eines schlanken, gehärteten Container-Images für FastAPI.
 - [ ] **Docker Compose:** Lokales Orchestrieren von FastAPI, PostgreSQL und Redis mit einem einzigen Befehl (`docker compose up`).
 - [ ] **PostgreSQL Migration:** Umstieg von SQLite auf PostgreSQL für Produktionstauglichkeit.

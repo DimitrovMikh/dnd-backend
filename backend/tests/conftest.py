@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.limiter import limiter
 from app.database import get_session
 from app.main import app
 
@@ -65,3 +66,14 @@ async def client(
 
     # Nach dem Test alle Overrides entfernen
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def disable_rate_limiter_for_tests():
+    """Deaktiviert das Rate Limiting standardmäßig für alle Testläufe,
+
+    damit normale Auth- und RBAC-Tests nicht blockiert werden.
+    """
+    limiter.enabled = False
+    yield
+    limiter.enabled = True

@@ -5,9 +5,15 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from app.core.exceptions import DNDGameException
+from app.core.config import settings
+from app.core.limiter import limiter
 from app.api.v1.characters import router as characters_router
 from app.api.v1.items import router as items_router
 from app.api.v1.spells import router as spells_router
@@ -23,7 +29,28 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="D&D Campaign Manager API", lifespan=lifespan)
+app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
+
+# --- RATE LIMITER CONFIGURATION (slowapi) ---
+# Registriert die Limiter-Instanz im App-State für routenbasierte Zugriffsbeschränkungen
+app.state.limiter = limiter
+
+# Fängt RateLimitExceeded-Exceptions ab und übersetzt sie in HTTP 429 Responses
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Verarbeitet Anfragen-Headers und IP-Adressen für das Rate-Limiting
+app.add_middleware(SlowAPIMiddleware)
+
+
+# --- SECURITY & CORS HARDENING ---
+# Konfiguriert Cross-Origin Resource Sharing für den sicheren Datenaustausch mit dem Frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ALLOWED_ORIGINS, # Strikte Herkunftskontrolle (kein Wildcard)
+    allow_credentials=True,                 # Erlaubt das Übertragen von HttpOnly Refresh-Cookies
+    allow_methods=["*"],                    # Erlaubt alle Standard-HTTP-Methoden (GET, POST, etc.)
+    allow_headers=["*"],                    # Erlaubt alle gängigen HTTP-Header (Authorization, Content-Type)
+)
 
 
 @app.exception_handler(DNDGameException)

@@ -2,9 +2,10 @@ from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
+from app.core.config import settings
 
 # Relativer Pfad zur SQLite-Datenbank im Projektstamm
-DATABASE_URL = "sqlite+aiosqlite:///./dnd.db"
+DATABASE_URL = settings.DATABASE_URL
 
 # Engine mit Logging für SQL-Queries
 engine = create_async_engine(DATABASE_URL, echo=True)

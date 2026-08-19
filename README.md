@@ -102,7 +102,7 @@ cd dnd-backend/backend
 
 # Virtuelle Umgebung erstellen & aktivieren
 python -m venv .venv
-source .venv/bin/activate  # Unter Windows: .venv\Scripts\activate
+source .venv/bin/activate  # Unter Windows: .venv/Scripts/activate
 
 # Packages installieren
 pip install -r requirements.txt

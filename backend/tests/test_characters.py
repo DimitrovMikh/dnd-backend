@@ -3,8 +3,8 @@ Prüft die API-Routen, D&D-Regelvalidierungen und Fehlermeldungen.
 """
 import pytest
 
-from app.models.characters import Character
-from app.models.spells import Spell
+from app.db.models.character import Character
+from app.db.models.spell import Spell
 
 @pytest.mark.asyncio
 async def test_learn_spell_level_too_low(client, async_session):

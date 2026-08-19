@@ -1,11 +1,10 @@
 from enum import Enum
 from typing import TYPE_CHECKING, Optional
 
-from sqlmodel import Field, Relationship, SQLModel 
+from sqlmodel import Field, Relationship, SQLModel
 
-# TYPE_CHECKING verhindert zirkuläre Imports zur Laufzeit
 if TYPE_CHECKING:
-    from app.models.characters import Character
+    from app.db.models.character import Character
 
 
 class ItemRarity(str, Enum):
@@ -17,11 +16,12 @@ class ItemRarity(str, Enum):
     LEGENDARY = "legendary"
 
 
-class ItemBase(SQLModel):
-    """Basis-Schema für Gegenstände/Waffen im Spiel.
-    Definiert Grundwerte wie Seltenheit, Goldwert, Beschreibung und Schäden.
+class Item(SQLModel, table=True):
+    """Haupt-Datenbankmodell für Items.
+    Verknüpft das Item optional mit seinem Besitzer (Character).
     """
 
+    id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     rarity: ItemRarity
     worth: int = Field(
@@ -35,20 +35,7 @@ class ItemBase(SQLModel):
     character_id: Optional[int] = Field(
         default=None,
         foreign_key="character.id",
-        ondelete="SET NULL"
+        ondelete="SET NULL",
     )
 
-
-class Item(ItemBase, table = True):
-    """Haupt-Datenbankmodell für Items.
-    Verknüpft das Item optional mit seinem Besitzer (Character).
-    """
-
-    id: Optional[int] = Field(default=None, primary_key=True)
     character: Optional["Character"] = Relationship(back_populates="items")
-
-
-class ItemCreate(ItemBase):
-    """Pydantic-Schema zur Validierung eingehender POST-Requests beim Erstellen von Items."""
-
-    pass

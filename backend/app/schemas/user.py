@@ -1,17 +1,11 @@
 import re
-from enum import Enum
 from typing import Optional
 
 from pydantic import field_validator
 from sqlmodel import Field, SQLModel
 
+from app.db.models.user import UserRole
 
-class UserRole(str, Enum):
-    """Aufzählung der möglichen Nutzer-Rollen."""
-
-    PLAYER = "player"
-    DUNGEON_MASTER = "dungeon_master"
-    ADMIN = "admin"
 
 class UserBase(SQLModel):
     """Gemeinsames Basis-Schema für Benutzerdaten.
@@ -31,15 +25,6 @@ class UserBase(SQLModel):
         default=UserRole.PLAYER, description="Rolle des Benutzers im System"
     )
 
-class User(UserBase, table=True):
-    """Haupt-Datenbankmodell für Benutzer.
-    Speichert das gehashte Passwort sicher in der Datenbank.
-    """
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-    hashed_password: str = Field(
-        description="Bcrypt-Hash des Benutzerpassworts"
-    )
 
 class UserCreate(UserBase):
     """Pydantic-Schema für eingehende Registrierungs-Requests.
@@ -52,7 +37,7 @@ class UserCreate(UserBase):
     @classmethod
     def validate_password_complexity(cls, v: str) -> str:
         """Validiert die Komplexität des Klartext-Passworts nach OWASP-Sicherheitsstandards.
-        
+
         Prüft Länge, Groß-/Kleinbuchstaben, Zahlen und Sonderzeichen vor der Verarbeitung.
         Wirft bei Regelverstößen einen ValueError, den FastAPI in HTTP 422 übersetzt.
         """
@@ -67,7 +52,7 @@ class UserCreate(UserBase):
             raise ValueError(
                 "Das Passwort muss mindestens einen Großbuchstaben enthalten."
             )
-        
+
         # 3. Mindestens ein Kleinbuchstabe (a-z)
         if not re.search(r"[a-z]", v):
             raise ValueError(
@@ -79,7 +64,7 @@ class UserCreate(UserBase):
             raise ValueError(
                 "Das Passwort muss mindestens eine Zahl enthalten."
             )
-        
+
         # 5. Mindestens ein Sonderzeichen (alles außer Alphanumerisch)
         if not re.search("[^a-zA-Z0-9]", v):
             raise ValueError(
@@ -93,7 +78,9 @@ class UserResponse(UserBase):
     """Pydantic-Schema für API-Antworten.
     Gibt Benutzerdaten ohne sensitive Informationen (Passwort/Hash) zurück.
     """
+
     id: int
+
 
 class UserLogin(SQLModel):
     """Schema für den eingehenden Login-Request."""

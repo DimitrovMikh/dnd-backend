@@ -12,10 +12,10 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
 
 # Models importieren, damit SQLModel.metadata die Tabellenstrukturen kennt
-from app.models.characters import Character  # noqa: F401
-from app.models.items import Item  # noqa: F401
-from app.models.spells import CharacterSpellLink, Spell  # noqa: F401
-from app.models.users import User # noqa: F401
+from app.db.models.character import Character  # noqa: F401
+from app.db.models.item import Item  # noqa: F401
+from app.db.models.spell import CharacterSpellLink, Spell  # noqa: F401
+from app.db.models.user import User  # noqa: F401
 
 config = context.config
 

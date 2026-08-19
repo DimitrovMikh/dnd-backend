@@ -4,13 +4,14 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from app.models.characters import Character
+    from app.db.models.character import Character
 
 
 class CharacterSpellLink(SQLModel, table=True):
     """N:M-Verknüpfungstabelle (Junction Table) zwischen Character und Spell.
     Koppelt Primärschlüssel beider Modelle als zusammengesetzten Primärschlüssel.
     """
+
     character_id: Optional[int] = Field(
         default=None, foreign_key="character.id", primary_key=True
     )
@@ -32,25 +33,15 @@ class SpellSchool(str, Enum):
     VERZAUBERUNG = "verzauberung"
 
 
-class SpellBase(SQLModel):
-    """Basis-Schema für Zaubersprüche."""
+class Spell(SQLModel, table=True):
+    """Haupt-Datenbankmodell für Zaubersprüche."""
 
+    id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     lvl: int
     school: SpellSchool
 
-
-class Spell(SpellBase, table=True):
-    """Haupt-Datenbankmodell für Zaubersprüche."""
-
-    id: Optional[int] = Field(default=None, primary_key=True)
     characters: List["Character"] = Relationship(
         back_populates="spells",
-        link_model=CharacterSpellLink
+        link_model=CharacterSpellLink,
     )
-
-
-class SpellCreate(SpellBase):
-    """Pydantic-Schema für die Erstellung neuer Zaubersprüche."""
-
-    pass

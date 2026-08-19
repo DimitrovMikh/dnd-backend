@@ -54,3 +54,24 @@ async def test_login_rate_limiting(client):
     finally:
         # 4. Nach dem Test wieder deaktivieren
         limiter.enabled = False
+
+
+@pytest.mark.asyncio
+async def test_owasp_security_headers(client):
+    """Prüft, ob alle relevanten OWASP-Security-Header in den Antworten enthalten sind."""
+    response = await client.get("/ping")
+    assert response.status_code == 200
+    assert response.headers.get("x-frame-options") == "DENY"
+    assert response.headers.get("x-content-type-options") == "nosniff"
+    assert response.headers.get("x-xss-protection") == "1; mode=block"
+    assert response.headers.get("referrer-policy") == "strict-origin-when-cross-origin"
+
+
+@pytest.mark.asyncio
+async def test_database_healthcheck_success(client):
+    """Prüft den Healthcheck-Endpunkt mit aktivem Datenbank-Ping (SELECT 1)."""
+    response = await client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert data["database"] == "connected"

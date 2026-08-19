@@ -14,10 +14,12 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.core.exceptions import DNDGameException
 from app.core.config import settings
 from app.core.limiter import limiter
+from app.core.middleware import SecurityHeadersMiddleware
 from app.api.v1.characters import router as characters_router
 from app.api.v1.items import router as items_router
 from app.api.v1.spells import router as spells_router
 from app.api.v1.auth import router as auth_router
+from app.api.v1.health import router as health_router
 
 
 @asynccontextmanager
@@ -42,14 +44,18 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
 
+# --- OWASP SECURITY HEADERS MIDDLEWARE ---
+app.add_middleware(SecurityHeadersMiddleware)
+
+
 # --- SECURITY & CORS HARDENING ---
 # Konfiguriert Cross-Origin Resource Sharing für den sicheren Datenaustausch mit dem Frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS, # Strikte Herkunftskontrolle (kein Wildcard)
-    allow_credentials=True,                 # Erlaubt das Übertragen von HttpOnly Refresh-Cookies
-    allow_methods=["*"],                    # Erlaubt alle Standard-HTTP-Methoden (GET, POST, etc.)
-    allow_headers=["*"],                    # Erlaubt alle gängigen HTTP-Header (Authorization, Content-Type)
+    allow_origins=settings.ALLOWED_ORIGINS,  # Strikte Herkunftskontrolle (kein Wildcard)
+    allow_credentials=True,                  # Erlaubt das Übertragen von HttpOnly Refresh-Cookies
+    allow_methods=["*"],                     # Erlaubt alle Standard-HTTP-Methoden (GET, POST, etc.)
+    allow_headers=["*"],                     # Erlaubt alle gängigen HTTP-Header (Authorization, Content-Type)
 )
 
 
@@ -63,8 +69,8 @@ async def dnd_game_exception_handler(request: Request, exc: DNDGameException):
         status_code=exc.status_code,
         content={
             "error_code": exc.error_code,
-            "message": exc.message
-        }
+            "message": exc.message,
+        },
     )
 
 
@@ -73,6 +79,7 @@ app.include_router(characters_router, prefix="/characters", tags=["Characters"])
 app.include_router(items_router, prefix="/items", tags=["Items"])
 app.include_router(spells_router, prefix="/spells", tags=["Spells"])
 app.include_router(auth_router)
+app.include_router(health_router)
 
 
 @app.get("/", tags=["Health"])

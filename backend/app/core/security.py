@@ -10,7 +10,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
-from app.models.users import User, UserRole
+from app.db.models.user import User, UserRole
 from app.core.config import settings
 
 

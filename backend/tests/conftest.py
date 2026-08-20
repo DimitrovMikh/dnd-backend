@@ -1,6 +1,14 @@
 """Pytest-Konfiguration und globale Async-Fixtures.
 Stellt eine In-Memory-SQLite-Datenbank und einen Test-Client bereit.
 """
+import os
+
+# Überschreibt den Schlüssel auch dann, wenn er als leerer String ("") aus Docker kommt
+if not os.getenv("SECRET_KEY"):
+    os.environ["SECRET_KEY"] = "test-secret-key-for-jwt-signing-1234567890-super-secret"
+
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+
 from typing import AsyncGenerator
 
 import pytest

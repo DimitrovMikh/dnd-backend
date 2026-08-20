@@ -21,6 +21,7 @@ WORKDIR /app
 COPY app/ ./app/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
+COPY tests/ ./tests/
 
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser

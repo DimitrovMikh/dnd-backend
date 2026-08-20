@@ -8,6 +8,7 @@ sqlmodel==0.0.39
 SQLAlchemy==2.0.51
 alembic==1.18.5
 aiosqlite==0.22.1
+asyncpg==0.29.0
 
 # Auth, Security & Rate Limiting
 pwdlib==0.3.0

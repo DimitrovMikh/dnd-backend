@@ -7,12 +7,13 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 ## 🛠️ Tech Stack & Werkzeuge
 
 * **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python 3.12+)
+* **Containerisierung & Orchestrierung:** [Docker](https://www.docker.com/) & Docker Compose (Multi-Stage Build, Non-Root System User)
 * **ORM & Validierung:** [SQLModel](https://sqlmodel.tiangolo.com/) (Kombination aus SQLAlchemy 2.0 & Pydantic)
+* **Asynchrone Datenbank:** [PostgreSQL 16](https://www.postgresql.org/) via `asyncpg` & `AsyncSession` (SQLite via `aiosqlite` als Fallback / für Tests)
 * **Sicherheit & Auth:** [PyJWT](https://pyjwt.readthedocs.io/) (Dual-Token: Access & Refresh JWTs) & [pwdlib](https://pwdlib.readthedocs.io/) mit `argon2-cffi` (Argon2id Password Hashing)
 * **Rate Limiting & Security:** [slowapi](https://github.com/laurents/slowapi) (Brute-Force Protection) & Custom OWASP Security Headers Middleware
 * **Konfiguration:** [Pydantic Settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) (Fail-Fast `.env` Validierung)
 * **Datenbank-Migrationen:** [Alembic](https://alembic.sqlalchemy.org/)
-* **Asynchrone Datenbank:** [SQLite](https://www.sqlite.org/) via `aiosqlite` & `AsyncSession`
 * **Automated Testing:** `pytest`, `pytest-asyncio` & `httpx`
 * **ASGI Server:** Uvicorn
 
@@ -20,6 +21,10 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 
 ## 🚀 Key Features & Highlights
 
+* **Containerisierung & Produktionstauglichkeit (Docker & PostgreSQL):**
+  * **Multi-Stage Build:** Schlankes, zweistufiges `Dockerfile` trennt Build-Abhängigkeiten vom finalen Runtime-Image.
+  * **OWASP Container Hardening:** Ausführung im Container unter einem dedizierten Nicht-Root-System-User (`appuser`).
+  * **Docker Compose Orchestrierung:** Integrierter Stack aus FastAPI und PostgreSQL 16 inklusive automatischer Healthchecks (`pg_isready`) und benannter Volumes für Datenpersistenz.
 * **Gehärtete Authentifizierung (Argon2id & Dual-Tokens):**
   * **Passworthashing:** Sicheres Argon2id Hashing via modernem `pwdlib`-Framework (OWASP-Standard).
   * **Passwort-Komplexität:** Pydantic Field-Validator erzwingt Mindestlänge (9 Zeichen), Groß-/Kleinbuchstaben, Zahlen und Sonderzeichen.
@@ -38,9 +43,12 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 
 ```text
 DND-BACKEND/
+├── docker-compose.yml              # 🐳 Docker Compose Orchestrierung (FastAPI + Postgres)
 ├── .vscode/                        # VS Code Projekt-Konfiguration
 │   └── settings.json
 ├── backend/                        # 🐍 FASTAPI BACKEND SERVICE
+│   ├── .dockerignore               # Ausschlussregeln für Docker Build-Kontext
+│   ├── Dockerfile                  # Multi-Stage Build & Non-Root User Hardening
 │   ├── alembic/                    # Alembic Migrations-Ordner
 │   │   ├── versions/               # Versionierte Migrations-Skripte
 │   │   ├── env.py                  # Async Migrations-Konfiguration & Model-Importe
@@ -85,7 +93,7 @@ DND-BACKEND/
 │   │   └── test_security.py        # Tests für OWASP-Header, Rate Limiting & Healthcheck
 │   ├── .env.example                # Muster-Datei für Umgebungsvariablen
 │   ├── alembic.ini                 # Hauptkonfiguration für DB-Migrationen
-│   └── requirements.txt            # Abgleicher aller Python-Pakete
+│   └── requirements.txt            # Abgleich aller Python-Pakete (incl. asyncpg)
 │
 ├── .gitignore                      # Ausschluss lokaler Laufzeit-Dateien & DBs
 └── README.md                       # Dokumentation
@@ -95,15 +103,42 @@ DND-BACKEND/
 
 ## ⚡ Quickstart / Lokale Installation
 
-### 1. Repository klonen & Abhängigkeiten installieren
+### Option A: Mit Docker & PostgreSQL (Empfohlen)
+
+#### 1. Repository klonen & Umgebungsvariablen anlegen
 ```bash
-git clone https://github.com/DimitrovMikh/dnd-backend.git
+git clone [https://github.com/DimitrovMikh/dnd-backend.git](https://github.com/DimitrovMikh/dnd-backend.git)
+cd dnd-backend
+
+# Umgebungsvariablen aus Vorlage kopieren
+cp backend/.env.example .env
+```
+
+#### 2. Stack mit Docker Compose bauen & starten
+```bash
+docker compose up --build -d
+```
+
+#### 3. Datenbank-Migrationen ausführen
+```bash
+docker compose exec backend alembic upgrade head
+```
+* **API Endpunkt:** `http://127.0.0.1:8000`
+* **Healthcheck:** `http://127.0.0.1:8000/health`
+* **Interaktive Swagger-Dokumentation:** `http://127.0.0.1:8000/docs`
+
+---
+
+### Option B: Manuelle lokale Installation (SQLite)
+
+#### 1. Virtuelle Umgebung einrichten & installieren
+```bash
 cd dnd-backend/backend
 
-# Virtuelle Umgebung erstellen & aktivieren
+# Virtuelle Umgebung erstellen
 python -m venv .venv
 
-# Aktivieren unter Linux / macOS;
+# Aktivieren unter Linux / macOS:
 source .venv/bin/activate
 
 # Aktivieren unter Windows (Git Bash):
@@ -116,39 +151,18 @@ source .venv/Scripts/activate
 pip install -r requirements.txt
 ```
 
-### 2. Umgebungsvariablen konfigurieren
-Erstelle eine `.env`-Datei im Ordner `backend/` basierend auf der Vorlage:
-
+#### 2. Konfiguration & Datenbank-Migrationen
 ```bash
 cp .env.example .env
-```
-
-```env
-PROJECT_NAME="D&D Campaign Manager API"
-ENVIRONMENT="development"
-
-SECRET_KEY="HIER_DEINEN_ZUFÄLLIGEN_32_CHAR_HEX_KEY_EINTRAGEN"
-ALGORITHM="HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES=15
-REFRESH_TOKEN_EXPIRE_DAYS=7
-
-DATABASE_URL="sqlite+aiosqlite:///./dnd.db"
-```
-
-### 3. Datenbank-Migrationen ausführen
-```bash
 alembic upgrade head
 ```
 
-### 4. Server starten
+#### 3. Server & Tests starten
 ```bash
+# Server starten
 uvicorn app.main:app --reload
-```
-* **API Endpunkt:** `http://127.0.0.1:8000`
-* **Interaktive Swagger-Dokumentation:** `http://127.0.0.1:8000/docs`
 
-### 5. Automatisierte Tests ausführen
-```bash
+# Tests ausführen
 pytest
 ```
 
@@ -200,12 +214,12 @@ pytest
 - [x] **Security Headers & CORS Hardening:** Granulare CORS-Policies und OWASP-Sicherheitsheader.
 - [x] **Passwort-Komplexitäts-Validierung:** Pydantic Field-Validator für Mindestanforderungen bei Passwörtern.
 
-#### 2. 🐳 Containerisierung & Datenbank-Upgrade (Docker & PostgreSQL) 🟡 (Nächster Schritt)
-- [ ] **Multi-Stage Dockerfile:** Erstellung eines schlanken, gehärteten Container-Images für FastAPI.
-- [ ] **Docker Compose:** Lokales Orchestrieren von FastAPI, PostgreSQL und Redis mit einem einzigen Befehl (`docker compose up`).
-- [ ] **PostgreSQL Migration:** Umstieg von SQLite auf PostgreSQL für Produktionstauglichkeit.
+#### 2. 🐳 Containerisierung & Datenbank-Upgrade (Docker & PostgreSQL) 🟢 (Abgeschlossen)
+- [x] **Multi-Stage Dockerfile:** Erstellung eines schlanken, gehärteten Container-Images für FastAPI (Non-Root User).
+- [x] **Docker Compose:** Lokales Orchestrieren von FastAPI und PostgreSQL mit einem einzigen Befehl (`docker compose up`).
+- [x] **PostgreSQL Migration:** Umstieg von SQLite auf PostgreSQL via `asyncpg` für Produktionstauglichkeit.
 
-#### 3. 🔄 Automated CI/CD Pipelines (GitHub Actions)
+#### 3. 🔄 Automated CI/CD Pipelines (GitHub Actions) 🟡 (Nächster Schritt)
 - [ ] **Automatisierte Qualitätskontrolle:** Linter (`Ruff`), Typ-Checks (`Mypy`) und die `pytest`-Suite laufen automatisch bei jedem Pull Request.
 - [ ] **Continuous Deployment (CD):** automatisierter Build und zero-downtime Rollout auf den Cloud-Server beim Merge auf `main`.
 

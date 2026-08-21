@@ -44,6 +44,8 @@ jobs:
     - name: Run Pytest
       env:
         SECRET_KEY: "test-secret-key-ci"
+        PROJECT_NAME: "DND Campaign Manager Test"
+        ENVIRONMENT: "testing"
       run: |
         cd backend
         pytest

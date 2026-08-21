@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Annotated
 
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -9,10 +9,9 @@ from pwdlib.hashers.argon2 import Argon2Hasher
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.config import settings
 from app.database import get_session
 from app.db.models.user import User, UserRole
-from app.core.config import settings
-
 
 # OAuth2-Schema: Liest den 'Authorization: Bearer <token>' Header aus und aktiviert den Login-Button in Swagger UI
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -38,7 +37,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(
-    data: dict, expire_delta: Optional[timedelta] = None
+    data: dict, expire_delta: timedelta | None = None
 ) -> str:
     """Erstellt ein digital signiertes JSON Web Token (JWT).
 
@@ -64,7 +63,7 @@ def create_access_token(
 
 
 def create_refresh_token(
-    data: dict, expire_delta: Optional[timedelta] = None
+    data: dict, expire_delta: timedelta | None = None
 ) -> str:
     """Erstellt ein langlebiges Refresh Token (JWT) zur Erneuerung des Access Tokens.
 
@@ -90,8 +89,8 @@ def create_refresh_token(
 
 
 async def get_current_user(
+    session: Annotated[AsyncSession, Depends(get_session)],
     token: str = Depends(oauth2_scheme),
-    session: AsyncSession = Depends(get_session),
 ) -> User:
     """FastAPI-Dependency: Extrahiert das JWT aus dem Header, validiert die Signatur
     sowie das Ablaufdatum und lädt den zugehörigen Benutzer aus der Datenbank.
@@ -108,9 +107,9 @@ async def get_current_user(
     try:
         # 1. JWT entschlüsseln und Signatur sowie 'exp'-Claim prüfen
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        username: str = payload.get("sub")
+        username: str | None = payload.get("sub")
 
-        if username is None:
+        if not username:
             raise credentials_exception
 
     except jwt.PyJWTError:
@@ -144,7 +143,7 @@ class RoleChecker:
     def __init__(self, allowed_roles: list[UserRole]):
         self.allowed_roles = allowed_roles
 
-    def __call__(self, current_user: User = Depends(get_current_user)) -> User:
+    def __call__(self, current_user: Annotated[User, Depends(get_current_user)]) -> User:
         """Prüft, ob die Rolle des aktuellen Benutzers in der Liste der erlaubten Rollen enthalten ist.
 
         :raises HTTPException: Status 403 FORBIDDEN, wenn die Rolle nicht ausreicht.

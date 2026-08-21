@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -12,10 +12,10 @@ class CharacterSpellLink(SQLModel, table=True):
     Koppelt Primärschlüssel beider Modelle als zusammengesetzten Primärschlüssel.
     """
 
-    character_id: Optional[int] = Field(
+    character_id: int | None = Field(
         default=None, foreign_key="character.id", primary_key=True
     )
-    spell_id: Optional[int] = Field(
+    spell_id: int | None = Field(
         default=None, foreign_key="spell.id", primary_key=True
     )
 
@@ -36,12 +36,12 @@ class SpellSchool(str, Enum):
 class Spell(SQLModel, table=True):
     """Haupt-Datenbankmodell für Zaubersprüche."""
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str
     lvl: int
     school: SpellSchool
 
-    characters: List["Character"] = Relationship(
+    characters: list["Character"] = Relationship(
         back_populates="spells",
         link_model=CharacterSpellLink,
     )

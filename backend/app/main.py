@@ -4,22 +4,21 @@ Registriert Middleware, Exception-Handler, Lifespan-Hooks und API-Router.
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import SQLModel
+from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from app.core.exceptions import DNDGameException
-from app.core.config import settings
-from app.core.limiter import limiter
-from app.core.middleware import SecurityHeadersMiddleware
+from app.api.v1.auth import router as auth_router
 from app.api.v1.characters import router as characters_router
+from app.api.v1.health import router as health_router
 from app.api.v1.items import router as items_router
 from app.api.v1.spells import router as spells_router
-from app.api.v1.auth import router as auth_router
-from app.api.v1.health import router as health_router
+from app.core.config import settings
+from app.core.exceptions import DNDGameException
+from app.core.limiter import limiter
+from app.core.middleware import SecurityHeadersMiddleware
 
 
 @asynccontextmanager
@@ -38,7 +37,7 @@ app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 app.state.limiter = limiter
 
 # Fängt RateLimitExceeded-Exceptions ab und übersetzt sie in HTTP 429 Responses
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 # Verarbeitet Anfragen-Headers und IP-Adressen für das Rate-Limiting
 app.add_middleware(SlowAPIMiddleware)

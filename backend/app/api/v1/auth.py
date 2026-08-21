@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
-from sqlmodel.ext.asyncio.session import AsyncSession
-import jwt
+from typing import Annotated
 
+import jwt
 from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.security import (
@@ -13,6 +12,8 @@ from app.database import get_session
 from app.db.models.user import User
 from app.schemas.user import Token, UserCreate, UserLogin, UserResponse
 from app.services import auth_service
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -23,7 +24,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
     status_code=status.HTTP_201_CREATED,
 )
 async def register_user(
-    user_in: UserCreate, session: AsyncSession = Depends(get_session)
+    user_in: UserCreate, session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Registriert einen neuen Benutzer im System."""
     return await auth_service.register_user(session, user_in)
@@ -39,7 +40,7 @@ async def login_user(
     request: Request,
     response: Response,
     user_in: UserLogin,
-    session: AsyncSession = Depends(get_session),
+    session: Annotated[AsyncSession, Depends(get_session)],
 ):
     """Authentifiziert einen Benutzer und stellt Token aus.
 
@@ -71,15 +72,15 @@ async def login_user(
     response_model=UserResponse,
     status_code=status.HTTP_200_OK,
 )
-async def read_users_me(current_user: User = Depends(get_current_user)):
+async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
     """Geschützter Endpunkt: Liefert das Profil des aktuell authentifizierten Benutzers zurück."""
     return current_user
 
 
 @router.post("/refresh", response_model=Token)
 async def refresh_access_token(
+    session: Annotated[AsyncSession, Depends(get_session)],
     refresh_token: str | None = Cookie(None, alias="refresh_token"),
-    session: AsyncSession = Depends(get_session),
 ):
     """Liest das HttpOnly Refresh-Cookie aus, entwertet/prüft es
     und stellt ein frisches Access Token aus.

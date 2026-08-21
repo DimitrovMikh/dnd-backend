@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sqlmodel import Field, SQLModel
 
@@ -15,15 +14,14 @@ class ItemBase(SQLModel):
     worth: int = Field(
         default=0, ge=0, description="Das Item muss 0 Gold oder höher kosten"
     )
-    description: Optional[str] = None
+    description: str | None = None
     damage_dice: str
-    character_id: Optional[int] = None
+    character_id: int | None = None
 
 
 class ItemCreate(ItemBase):
     """Pydantic-Schema zur Validierung eingehender POST-Requests beim Erstellen von Items."""
 
-    pass
 
 
 class ItemResponse(ItemBase):

@@ -9,18 +9,17 @@ if not os.getenv("SECRET_KEY"):
 
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlmodel import SQLModel
-from sqlmodel.ext.asyncio.session import AsyncSession
-
 from app.core.limiter import limiter
 from app.database import get_session
 from app.main import app
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlmodel import SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 # In-Memory SQLite URL für isolierte, blitzschnelle Tests im RAM
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"

@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Optional
 
 from sqlmodel import Field, SQLModel
 
@@ -17,7 +16,7 @@ class User(SQLModel, table=True):
     Speichert das gehashte Passwort sicher in der Datenbank.
     """
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     username: str = Field(
         unique=True, index=True, description="Eindeutiger Benutzername"
     )

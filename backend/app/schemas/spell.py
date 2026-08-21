@@ -14,7 +14,6 @@ class SpellBase(SQLModel):
 class SpellCreate(SpellBase):
     """Pydantic-Schema für die Erstellung neuer Zaubersprüche."""
 
-    pass
 
 
 class SpellResponse(SpellBase):

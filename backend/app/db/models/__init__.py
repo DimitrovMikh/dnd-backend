@@ -5,11 +5,11 @@ from app.db.models.user import User, UserRole
 
 __all__ = [
     "Character",
+    "CharacterSpellLink",
     "Item",
     "ItemRarity",
     "Spell",
     "SpellSchool",
-    "CharacterSpellLink",
     "User",
     "UserRole",
 ]

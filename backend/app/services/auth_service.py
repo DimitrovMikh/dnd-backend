@@ -1,5 +1,4 @@
 """Business Logic / Service Layer für Authentifizierung und Benutzerverwaltung."""
-from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlmodel import select
@@ -10,7 +9,7 @@ from app.db.models.user import User
 from app.schemas.user import UserCreate, UserLogin
 
 
-async def get_user_by_username(session: AsyncSession, username: str) -> Optional[User]:
+async def get_user_by_username(session: AsyncSession, username: str) -> User | None:
     """Sucht einen Benutzer anhand des Benutzernamens in der Datenbank."""
     statement = select(User).where(User.username == username)
     result = await session.exec(statement)
@@ -19,7 +18,7 @@ async def get_user_by_username(session: AsyncSession, username: str) -> Optional
 
 async def get_user_by_username_or_email(
     session: AsyncSession, username: str, email: str
-) -> Optional[User]:
+) -> User | None:
     """Sucht nach einem existierenden Benutzer mit gleichem Benutzernamen oder gleicher E-Mail."""
     statement = select(User).where(
         (User.username == username) | (User.email == email)

@@ -1,5 +1,4 @@
 """Business Logic / Service Layer für Items / Gegenstände."""
-from typing import List, Optional
 
 from fastapi import HTTPException, status
 from sqlmodel import select
@@ -9,7 +8,7 @@ from app.db.models.item import Item
 from app.schemas.item import ItemCreate
 
 
-async def get_all_items(session: AsyncSession) -> List[Item]:
+async def get_all_items(session: AsyncSession) -> list[Item]:
     """Ruft alle Items aus der Datenbank ab."""
     statement = select(Item)
     results = await session.exec(statement)

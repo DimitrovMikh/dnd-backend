@@ -1,6 +1,5 @@
 import pytest
-
-from app.core.security import get_hash_password, verify_password, create_access_token
+from app.core.security import create_access_token, get_hash_password, verify_password
 
 # --- REGISTRIERUNGS-TESTS ---
 

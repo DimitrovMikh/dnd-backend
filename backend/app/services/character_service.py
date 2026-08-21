@@ -1,5 +1,4 @@
 """Business Logic / Service Layer für Charaktere."""
-from typing import List
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import selectinload
@@ -12,13 +11,13 @@ from app.schemas.character import CharacterCreate
 from app.services.spell_service import validate_spell_learning
 
 
-async def get_all_characters(session: AsyncSession) -> List[Character]:
+async def get_all_characters(session: AsyncSession) -> list[Character]:
     """Ruft alle Charaktere aus der Datenbank ab (inkl. Eager Loading von items und spells)."""
     statement = (
         select(Character)
         .options(
-            selectinload(Character.items),
-            selectinload(Character.spells),
+            selectinload(Character.items),  # type: ignore[arg-type]
+            selectinload(Character.spells), # type: ignore[arg-type]
         )
     )
     results = await session.exec(statement)
@@ -37,8 +36,8 @@ async def get_character_by_id(
         select(Character)
         .where(Character.id == character_id)
         .options(
-            selectinload(Character.items),
-            selectinload(Character.spells),
+            selectinload(Character.items),  # type: ignore[arg-type]
+            selectinload(Character.spells), # type: ignore[arg-type]
         )
     )
     result = await session.exec(statement)
@@ -76,7 +75,7 @@ async def learn_spell_for_character(
     statement = (
         select(Character)
         .where(Character.id == character_id)
-        .options(selectinload(Character.spells))
+        .options(selectinload(Character.spells))    # type: ignore[arg-type]
     )
     result = await session.exec(statement)
     db_character = result.first()

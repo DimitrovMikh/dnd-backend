@@ -1,4 +1,3 @@
-from typing import List, Optional
 
 from sqlmodel import Field, SQLModel
 
@@ -25,7 +24,6 @@ class CharacterBase(SQLModel):
 class CharacterCreate(CharacterBase):
     """Pydantic-Schema für eingehende POST-Requests zur Erstellung eines Charakters."""
 
-    pass
 
 
 class CharacterResponse(CharacterBase):
@@ -49,5 +47,5 @@ class CharacterReadWithRelations(SQLModel):
     stat_int: int
     stat_wis: int
     stat_cha: int
-    items: List[ItemResponse] = []
-    spells: List[SpellResponse] = []
+    items: list[ItemResponse] = []
+    spells: list[SpellResponse] = []

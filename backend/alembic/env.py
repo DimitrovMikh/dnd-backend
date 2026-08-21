@@ -7,15 +7,15 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import pool
-from sqlalchemy.ext.asyncio import async_engine_from_config
-from sqlmodel import SQLModel
 
 # Models importieren, damit SQLModel.metadata die Tabellenstrukturen kennt
 from app.db.models.character import Character  # noqa: F401
 from app.db.models.item import Item  # noqa: F401
 from app.db.models.spell import CharacterSpellLink, Spell  # noqa: F401
 from app.db.models.user import User  # noqa: F401
+from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlmodel import SQLModel
 
 config = context.config
 

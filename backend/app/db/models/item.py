@@ -21,18 +21,18 @@ class Item(SQLModel, table=True):
     Verknüpft das Item optional mit seinem Besitzer (Character).
     """
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str
     rarity: ItemRarity
     worth: int = Field(
         default=0, ge=0, description="Das Item muss 0 Gold oder höher kosten"
     )
-    description: Optional[str] = None
+    description: str | None = None
     damage_dice: str
 
     # 1:N Fremdschlüssel-Beziehung zu Character
     # ondelete="SET NULL": Wenn der Charakter gelöscht wird, bleibt das Item ohne Besitzer existieren.
-    character_id: Optional[int] = Field(
+    character_id: int | None = Field(
         default=None,
         foreign_key="character.id",
         ondelete="SET NULL",

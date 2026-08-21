@@ -1,7 +1,6 @@
 """Business Logic / Service Layer für Zaubersprüche.
 Enthält D&D-Regelprüfungen sowie Datenbank-Operationen für Spells.
 """
-from typing import List
 
 from fastapi import HTTPException, status
 from sqlmodel import select
@@ -28,10 +27,9 @@ def validate_spell_learning(character: Character, spell: Spell) -> None:
             character_lvl=character.lvl, spell_lvl=spell.lvl
         )
 
-    return None
 
 
-async def get_all_spells(session: AsyncSession) -> List[Spell]:
+async def get_all_spells(session: AsyncSession) -> list[Spell]:
     """Ruft eine Liste aller registrierten Zaubersprüche ab."""
     statement = select(Spell)
     results = await session.exec(statement)

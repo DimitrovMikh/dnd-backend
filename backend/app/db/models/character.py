@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING, List, Optional
-
-from sqlmodel import Field, Relationship, SQLModel
+from typing import TYPE_CHECKING
 
 from app.db.models.spell import CharacterSpellLink
+from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.db.models.item import Item
@@ -14,7 +13,7 @@ class Character(SQLModel, table=True):
     Verknüpft Inventar-Items (1:N) und Zaubersprüche (N:M via Link-Tabelle).
     """
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str
     character_class: str
     lvl: int = Field(default=1, ge=1)
@@ -25,8 +24,8 @@ class Character(SQLModel, table=True):
     stat_wis: int = Field(default=1, ge=1)
     stat_cha: int = Field(default=1, ge=1)
 
-    items: List["Item"] = Relationship(back_populates="character")
-    spells: List["Spell"] = Relationship(
+    items: list["Item"] = Relationship(back_populates="character")
+    spells: list["Spell"] = Relationship(
         back_populates="characters",
         link_model=CharacterSpellLink,
     )

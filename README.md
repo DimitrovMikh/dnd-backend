@@ -43,6 +43,10 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 
 ```text
 DND-BACKEND/
+├── .github/                        # 🤖 GitHub Actions Automation
+│   └── workflows/
+│       ├── cd.yml                  # 🚀 CD Pipeline (GHCR Docker Build & Push)
+│       └── ci.yml                  # 🧪 CI Pipeline (Ruff, Mypy, Pytest)
 ├── docker-compose.yml              # 🐳 Docker Compose Orchestrierung (FastAPI + Postgres)
 ├── .vscode/                        # VS Code Projekt-Konfiguration
 │   └── settings.json
@@ -190,38 +194,55 @@ pytest
 
 ## 🛣️ Roadmap
 
-### Phase 1 & 2: Core Architecture, Auth & RBAC 🟢 (Abgeschlossen)
-- [x] Modulares Grundgerüst & Eager Loading für Relationen
-- [x] **Business Logic Validation:** Level-Regelprüfung (Charakter-Level vs. Spell-Level) vor dem Lernen
-- [x] **Database Integrity:** `UniqueConstraint` auf der Link-Tabelle gegen doppelt gelernte Zauber
-- [x] **Custom Domain Exceptions:** Zentrale Fehlerbehandlung für D&D-Regelverstöße
-- [x] **Service Layer Pattern:** Isolierte Fachlogik entkoppelt von der Transport-Schicht
-- [x] **Automated Testing:** Integrationstests mit `pytest` und In-Memory Test-Datenbank
-- [x] **Alembic Database Migrations:** Schema-Änderungen sauber verwalten und versionieren
-- [x] **Authentication & Security:** JWT-Token basierte Benutzerverwaltung & Passwort-Hashing via Bcrypt
-- [x] **Authorization Dependency:** Geschützte Routen via `get_current_user`
-- [x] **Role-Based Access Control (RBAC):** Routen-Schutz nach Benutzerrollen (z. B. nur Dungeon Master darf Spells anlegen)
+### Phase 1: Domain-Architektur, Service Layer & Datenmodelle 🟢 (Abgeschlossen)
+<details>
+  <summary>🔍 Details & umgesetzte Features anzeigen</summary>
+
+  - [x] Modulares Grundgerüst & Eager Loading für Relationen
+  - [x] **Business Logic Validation:** Level-Regelprüfung (Charakter-Level vs. Spell-Level) vor dem Lernen
+  - [x] **Database Integrity:** `UniqueConstraint` auf der Link-Tabelle gegen doppelt gelernte Zauber
+  - [x] **Custom Domain Exceptions:** Zentrale Fehlerbehandlung für D&D-Regelverstöße
+  - [x] **Service Layer Pattern:** Isolierte Fachlogik entkoppelt von der Transport-Schicht
+  - [x] **Automated Testing:** Integrationstests mit `pytest` und In-Memory Test-Datenbank
+  - [x] **Alembic Database Migrations:** Schema-Änderungen sauber verwalten und versionieren
+</details>
+
+### Phase 2: Authentication, Security & RBAC 🟢 (Abgeschlossen)
+<details>
+  <summary>🔍 Details & umgesetzte Features anzeigen</summary>
+
+  - [x] **Authentication & Security:** JWT-Token basierte Benutzerverwaltung & Passwort-Hashing (Argon2id)
+  - [x] **Authorization Dependency:** Geschützte Routen via `get_current_user`
+  - [x] **Role-Based Access Control (RBAC):** Routen-Schutz nach Benutzerrollen (z. B. nur Dungeon Master darf Spells anlegen)
+  </details>
 
 ---
 
 ### Phase 3: Cybersecurity Hardening, Containerisierung & Cloud 🟡 (In Arbeit)
 
-#### 1. 🛡️ Advanced Cybersecurity & Auth Hardening 🟢 (Abgeschlossen)
+<details>
+  <summary>🔍 1. 🛡️ Advanced Cybersecurity & Auth Hardening 🟢 (Abgeschlossen)</summary>
+
 - [x] **Dual-Token System (Refresh Tokens):** Implementierung von kurzlebigen Access-Tokens + langlebigen Refresh-Tokens inkl. Token-Blacklisting/Rotation.
 - [x] **Argon2 Password Hashing:** Upgrade des Hashing-Algorithmus von Bcrypt auf **Argon2id** (OWASP-Empfehlung) via `argon2-cffi` / `pwdlib`.
 - [x] **Secret Management & Config:** Auslagern aller Secrets und Schlüssel aus dem Code in `.env`-Dateien mit `pydantic-settings`.
 - [x] **Rate Limiting & Brute-Force Protection:** Schutz sensitiver Endpunkte (`/auth/login`) gegen Brute-Force-Angriffe (z. B. via `slowapi` / Redis).
 - [x] **Security Headers & CORS Hardening:** Granulare CORS-Policies und OWASP-Sicherheitsheader.
 - [x] **Passwort-Komplexitäts-Validierung:** Pydantic Field-Validator für Mindestanforderungen bei Passwörtern.
+</details>
 
-#### 2. 🐳 Containerisierung & Datenbank-Upgrade (Docker & PostgreSQL) 🟢 (Abgeschlossen)
+<details>
+  <summary>🔍 2. 🐳 Containerisierung & Datenbank-Upgrade (Docker & PostgreSQL) 🟢 (Abgeschlossen)</summary>
+
 - [x] **Multi-Stage Dockerfile:** Erstellung eines schlanken, gehärteten Container-Images für FastAPI (Non-Root User).
 - [x] **Docker Compose:** Lokales Orchestrieren von FastAPI und PostgreSQL mit einem einzigen Befehl (`docker compose up`).
 - [x] **PostgreSQL Migration:** Umstieg von SQLite auf PostgreSQL via `asyncpg` für Produktionstauglichkeit.
+</details>
 
-#### 3. 🔄 Automated CI/CD Pipelines (GitHub Actions) 🟡 (Nächster Schritt)
-- [ ] **Automatisierte Qualitätskontrolle:** Linter (`Ruff`), Typ-Checks (`Mypy`) und die `pytest`-Suite laufen automatisch bei jedem Pull Request.
-- [ ] **Continuous Deployment (CD):** automatisierter Build und zero-downtime Rollout auf den Cloud-Server beim Merge auf `main`.
+#### 3. 🔄 Automated CI/CD Pipelines (GitHub Actions) 🟡 (In Arbeit)
+- [x] **Automatisierte Qualitätskontrolle (CI):** Linter (`Ruff`), Typ-Checks (`Mypy`) und `pytest`-Suite laufen automatisch bei jedem Pull Request.
+- [x] **Continuous Delivery (CD - Part 1):** Automatisierter Docker Multi-Stage Build & Push in die GitHub Container Registry (`ghcr.io`) nach grünem CI-Lauf auf `main`.
+- [ ] **Continuous Deployment (CD - Part 2):** Automatisierter SSH-Rollout und Container-Swap auf den Hetzner-VPS *(folgt nach Schritt 4)*.
 
 #### 4. ☁️ Production Hosting, Reverse Proxy & Monitoring
 - [ ] **Cloud Deployment:** Server-Setup auf Hetzner.

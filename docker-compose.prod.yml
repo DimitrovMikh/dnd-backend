@@ -18,7 +18,7 @@ services:
       - internal_network
 
   backend:
-    image: ghcr.io/DimitrovMikh/dnd-backend:latest
+    image: ghcr.io/dimitrovmikh/dnd-backend:latest
     container_name: dnd_backend
     restart: unless-stopped
     env_file:

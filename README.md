@@ -8,6 +8,9 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 
 * **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python 3.12+)
 * **Containerisierung & Orchestrierung:** [Docker](https://www.docker.com/) & Docker Compose (Multi-Stage Build, Non-Root System User)
+* **Reverse Proxy & TLS:** [Caddy](https://caddyserver.com/) (Automatisches TLS/SSL via Let's Encrypt & Reverse Proxying)
+* **Hosting & Cloud:** Contabo Linux VPS (UFW Firewall, Key-only SSH Hardening, Non-Root Deployment User)
+* **CI/CD & Registry:** [GitHub Actions](https://github.com/features/actions) & GitHub Container Registry (`ghcr.io`)
 * **ORM & Validierung:** [SQLModel](https://sqlmodel.tiangolo.com/) (Kombination aus SQLAlchemy 2.0 & Pydantic)
 * **Asynchrone Datenbank:** [PostgreSQL 16](https://www.postgresql.org/) via `asyncpg` & `AsyncSession` (SQLite via `aiosqlite` als Fallback / für Tests)
 * **Sicherheit & Auth:** [PyJWT](https://pyjwt.readthedocs.io/) (Dual-Token: Access & Refresh JWTs) & [pwdlib](https://pwdlib.readthedocs.io/) mit `argon2-cffi` (Argon2id Password Hashing)
@@ -30,12 +33,13 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
   * **Passwort-Komplexität:** Pydantic Field-Validator erzwingt Mindestlänge (9 Zeichen), Groß-/Kleinbuchstaben, Zahlen und Sonderzeichen.
   * **Access Token:** Kurzlebiges JWT (15 Minuten Gültigkeit) für API-Zugriffe im `Authorization: Bearer`-Header.
   * **Refresh Token:** Langlebiges JWT (7 Tage Gültigkeit), geschützt in einem **`HttpOnly` Cookie** (`SameSite=lax`) gegen XSS-Angriffe.
+* **Automatisierte CI/CD Pipeline:** GitHub Actions baut bei jedem Push auf `main` das Docker-Image, lädt es in die GitHub Container Registry (`ghcr.io`) und führt einen automatisierten SSH-Rollout auf den VPS durch.
 * **Brute-Force Protection & Rate Limiting:** IP-basierte Begrenzung sensitiver Endpunkte (`/auth/login` auf 5 Requests/Minute) via `slowapi`.
 * **OWASP Security Headers & CORS Hardening:** Granulare CORS-Policies sowie automatische Injektion von Sicherheits-Headern (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`).
 * **Role-Based Access Control (RBAC):** Granulare Rechtevergabe über die `RoleChecker`-Dependency für geschützte Aktionen (`DUNGEON_MASTER` / `ADMIN`).
 * **Clean Architecture & Service Layer:** Strikte Entkopplung von Datenbank-Tabellen (`app/db/models/`), API-DTOs (`app/schemas/`) und der Business-Logik (`app/services/`).
 * **Echtzeit-Healthcheck:** Dedicated `/health`-Endpoint führt eine Live-Verbindungsprüfung (`SELECT 1`) gegen die Datenbank durch.
-* **Automatisierte Test-Suite:** 100 % grün durchlaufende Integrationstests (22 Tests) mit `pytest-asyncio` über eine In-Memory Test-Datenbank.
+* **Automatisierte Test-Suite:** 100 % grün durchlaufende Integrationstests mit `pytest-asyncio` über eine In-Memory Test-Datenbank.
 
 ---
 
@@ -45,9 +49,10 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 DND-BACKEND/
 ├── .github/                        # 🤖 GitHub Actions Automation
 │   └── workflows/
-│       ├── cd.yml                  # 🚀 CD Pipeline (GHCR Docker Build & Push)
+│       ├── cd.yml                  # 🚀 CD Pipeline (GHCR Build/Push & SSH VPS Deployment)
 │       └── ci.yml                  # 🧪 CI Pipeline (Ruff, Mypy, Pytest)
-├── docker-compose.yml              # 🐳 Docker Compose Orchestrierung (FastAPI + Postgres)
+├── docker-compose.yml              # 🐳 Docker Compose für lokale Entwicklung (build: ./backend)
+├── docker-compose.prod.yml         # 🚀 Docker Compose für Produktion auf dem VPS (image: ghcr.io)
 ├── .vscode/                        # VS Code Projekt-Konfiguration
 │   └── settings.json
 ├── backend/                        # 🐍 FASTAPI BACKEND SERVICE
@@ -214,19 +219,19 @@ pytest
   - [x] **Authentication & Security:** JWT-Token basierte Benutzerverwaltung & Passwort-Hashing (Argon2id)
   - [x] **Authorization Dependency:** Geschützte Routen via `get_current_user`
   - [x] **Role-Based Access Control (RBAC):** Routen-Schutz nach Benutzerrollen (z. B. nur Dungeon Master darf Spells anlegen)
-  </details>
+</details>
 
 ---
 
-### Phase 3: Cybersecurity Hardening, Containerisierung & Cloud 🟡 (In Arbeit)
+### Phase 3: Cybersecurity Hardening, Containerisierung & Cloud 🟢 (Abgeschlossen)
 
 <details>
   <summary>🔍 1. 🛡️ Advanced Cybersecurity & Auth Hardening 🟢 (Abgeschlossen)</summary>
 
-- [x] **Dual-Token System (Refresh Tokens):** Implementierung von kurzlebigen Access-Tokens + langlebigen Refresh-Tokens inkl. Token-Blacklisting/Rotation.
+- [x] **Dual-Token System (Refresh Tokens):** Implementierung von kurzlebigen Access-Tokens + langlebigen Refresh-Tokens.
 - [x] **Argon2 Password Hashing:** Upgrade des Hashing-Algorithmus von Bcrypt auf **Argon2id** (OWASP-Empfehlung) via `argon2-cffi` / `pwdlib`.
 - [x] **Secret Management & Config:** Auslagern aller Secrets und Schlüssel aus dem Code in `.env`-Dateien mit `pydantic-settings`.
-- [x] **Rate Limiting & Brute-Force Protection:** Schutz sensitiver Endpunkte (`/auth/login`) gegen Brute-Force-Angriffe (z. B. via `slowapi` / Redis).
+- [x] **Rate Limiting & Brute-Force Protection:** Schutz sensitiver Endpunkte (`/auth/login`) gegen Brute-Force-Angriffe via `slowapi`.
 - [x] **Security Headers & CORS Hardening:** Granulare CORS-Policies und OWASP-Sicherheitsheader.
 - [x] **Passwort-Komplexitäts-Validierung:** Pydantic Field-Validator für Mindestanforderungen bei Passwörtern.
 </details>
@@ -239,16 +244,23 @@ pytest
 - [x] **PostgreSQL Migration:** Umstieg von SQLite auf PostgreSQL via `asyncpg` für Produktionstauglichkeit.
 </details>
 
-#### 3. 🔄 Automated CI/CD Pipelines (GitHub Actions) 🟡 (In Arbeit)
+<details>
+  <summary>🔍 3. 🔄 Automated CI/CD Pipelines (GitHub Actions) 🟢 (Abgeschlossen)</summary>
+
 - [x] **Automatisierte Qualitätskontrolle (CI):** Linter (`Ruff`), Typ-Checks (`Mypy`) und `pytest`-Suite laufen automatisch bei jedem Pull Request.
-- [x] **Continuous Delivery (CD - Part 1):** Automatisierter Docker Multi-Stage Build & Push in die GitHub Container Registry (`ghcr.io`) nach grünem CI-Lauf auf `main`.
-- [ ] **Continuous Deployment (CD - Part 2):** Automatisierter SSH-Rollout und Container-Swap auf den Hetzner-VPS *(folgt nach Schritt 4)*.
+- [x] **Continuous Delivery & Deployment (CD):** Build & Push des Docker Multi-Stage Images in die GitHub Container Registry (`ghcr.io`) inklusive automatisiertem SSH-Rollout und Container-Swap auf dem VPS bei Push auf `main`.
+</details>
 
-#### 4. ☁️ Production Hosting, Reverse Proxy & Monitoring
-- [ ] **Cloud Deployment:** Server-Setup auf Hetzner.
-- [ ] **Reverse Proxy & SSL:** NGINX / Caddy Konfiguration für automatische HTTPS-Zertifikate via Let's Encrypt.
+<details>
+  <summary>🔍 4. ☁️ Production Hosting, Reverse Proxy & Security 🟢 (Abgeschlossen)</summary>
+
+- [x] **Cloud Deployment:** VPS-Setup auf Contabo mit UFW-Firewalling, SSH-Hardening und dediziertem Non-Root Deployment User.
+- [x] **Reverse Proxy & TLS:** Caddy Reverse Proxy Konfiguration für automatisches SSL/TLS-Zertifikatsmanagement via Let's Encrypt.
 - [ ] **Observability:** Structured JSON-Logging (`structlog`) & Error Tracking via Sentry.
+</details>
 
-#### 5. ⚡ Realtime & Advanced D&D Features
+---
+
+### Phase 4: ⚡ Realtime & Advanced D&D Features 🟡 (In Planung)
 - [ ] **WebSockets Integration:** Live-Synchronisation von Würfelergebnissen und Initiative-Tracker für die gesamte Spielgruppe in Echtzeit.
 - [ ] **Background Tasks & Caching:** Redis-Caching für Spieldaten und asynchrone Hintergrundaufgaben (z. B. PDF-Charakterbogen-Generierung).

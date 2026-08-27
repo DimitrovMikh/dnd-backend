@@ -230,46 +230,32 @@ pytest
   - [x] **Role-Based Access Control (RBAC):** Routen-Schutz nach Benutzerrollen (z. B. nur Dungeon Master darf Spells anlegen)
 </details>
 
----
-
 ### Phase 3: Cybersecurity Hardening, Containerisierung & Cloud 🟢 (Abgeschlossen)
-
 <details>
-  <summary>🔍 1. 🛡️ Advanced Cybersecurity & Auth Hardening 🟢 (Abgeschlossen)</summary>
+  <summary>🔍 Details & umgesetzte Features anzeigen</summary>
 
-- [x] **Dual-Token System (Refresh Tokens):** Implementierung von kurzlebigen Access-Tokens + langlebigen Refresh-Tokens.
-- [x] **Argon2 Password Hashing:** Upgrade des Hashing-Algorithmus von Bcrypt auf **Argon2id** (OWASP-Empfehlung) via `argon2-cffi` / `pwdlib`.
-- [x] **Secret Management & Config:** Auslagern aller Secrets und Schlüssel aus dem Code in `.env`-Dateien mit `pydantic-settings`.
-- [x] **Rate Limiting & Brute-Force Protection:** Schutz sensitiver Endpunkte (`/auth/login`) gegen Brute-Force-Angriffe via `slowapi`.
-- [x] **Security Headers & CORS Hardening:** Granulare CORS-Policies und OWASP-Sicherheitsheader.
-- [x] **Passwort-Komplexitäts-Validierung:** Pydantic Field-Validator für Mindestanforderungen bei Passwörtern.
-</details>
-
-<details>
-  <summary>🔍 2. 🐳 Containerisierung & Datenbank-Upgrade (Docker & PostgreSQL) 🟢 (Abgeschlossen)</summary>
-
-- [x] **Multi-Stage Dockerfile:** Erstellung eines schlanken, gehärteten Container-Images für FastAPI (Non-Root User).
-- [x] **Docker Compose:** Lokales Orchestrieren von FastAPI und PostgreSQL mit einem einzigen Befehl (`docker compose up`).
-- [x] **PostgreSQL Migration:** Umstieg von SQLite auf PostgreSQL via `asyncpg` für Produktionstauglichkeit.
-</details>
-
-<details>
-  <summary>🔍 3. 🔄 Automated CI/CD Pipelines (GitHub Actions) 🟢 (Abgeschlossen)</summary>
-
-- [x] **Automatisierte Qualitätskontrolle (CI):** Linter (`Ruff`), Typ-Checks (`Mypy`) und `pytest`-Suite laufen automatisch bei jedem Pull Request.
-- [x] **Continuous Delivery & Deployment (CD):** Build & Push des Docker Multi-Stage Images in die GitHub Container Registry (`ghcr.io`) inklusive automatisiertem SSH-Rollout und Container-Swap auf dem VPS bei Push auf `main`.
-</details>
-
-<details>
-  <summary>🔍 4. ☁️ Production Hosting, Reverse Proxy & Security 🟢 (Abgeschlossen)</summary>
-
-- [x] **Cloud Deployment:** VPS-Setup auf Contabo mit UFW-Firewalling, SSH-Hardening und dediziertem Non-Root Deployment User.
-- [x] **Reverse Proxy & TLS:** Caddy Reverse Proxy Konfiguration für automatisches SSL/TLS-Zertifikatsmanagement via Let's Encrypt.
-- [x] **Observability:** Structured JSON-Logging (`structlog`) & Error Tracking via Sentry.
+  - [x] **Dual-Token System (Refresh Tokens):** Kurzlebige Access-Tokens + langlebige Refresh-Tokens in `HttpOnly` Cookies.
+  - [x] **Argon2 Password Hashing:** OWASP-Standard Hashing via `argon2-cffi` / `pwdlib`.
+  - [x] **Rate Limiting & Security Headers:** Brute-Force-Schutz (`slowapi`) und Security-Header-Middleware.
+  - [x] **Containerisierung & PostgreSQL:** Multi-Stage Dockerfile (Non-Root User) und PostgreSQL 16 via `asyncpg`.
+  - [x] **Automatisierte CI/CD Pipeline:** GitHub Actions (Ruff, Mypy, Pytest) mit automatischem Deployment auf VPS.
+  - [x] **Production Hosting & Observability:** Caddy Reverse Proxy (Let's Encrypt), `structlog` JSON-Logging & Sentry Error Tracking.
 </details>
 
 ---
 
-### Phase 4: ⚡ Realtime & Advanced D&D Features 🟡 (In Planung)
-- [ ] **WebSockets Integration:** Live-Synchronisation von Würfelergebnissen und Initiative-Tracker für die gesamte Spielgruppe in Echtzeit.
-- [ ] **Background Tasks & Caching:** Redis-Caching für Spieldaten und asynchrone Hintergrundaufgaben (z. B. PDF-Charakterbogen-Generierung).
+### Phase 4: ⚡ Realtime, Combat & Core D&D Engines 🟡 (In Planung)
+- [ ] **Monster- & Kreaturen-Baukasten:** SRD-Statblock-Verwaltung & Redis-In-Memory-Caching.
+- [ ] **Initiative & Combat Tracker:** Live-Synchronisation von Kampfrunden, HP & Zuständen via WebSockets & Redis Pub/Sub.
+- [ ] **Charakter-Erstellung & Level-Up Engine:** Automatisierte Berechnung von HP, Multiclassing, Feats & Volks-Merkmalen.
+- [ ] **Inventar & Ressourcen-Management:** Traglast (Encumbrance), Attunement, Spell Slots & asynchrone PDF/Loot-Tasks (ARQ/Celery).
+
+### Phase 5: 🗺️ Worldbuilding, Story & Homebrew Ecosystem ⚪ (Geplant)
+- [ ] **Kartografie & Weltbau:** Hierarchische Ortsverwaltung, In-Game-Kalender & Rast-Mechaniken.
+- [ ] **Quest-Log & Fraktions-System:** Handlungsstränge, NPC-Beziehungsnetzwerke & getrennte DM/Spieler-Sichtbarkeiten.
+- [ ] **Homebrew-Bibliothek:** System zur Erstellung und Verwaltung eigener Hausregeln, Zauber, Items & Monster.
+
+### Phase 6: 🖥️ Frontend Application & Web UI ⚪ (Geplant)
+- [ ] **SPA Framework Integration:** Modernes Web-Frontend (TypeScript, State Management, Auth-Integration).
+- [ ] **Live DM Screen & Combat Dashboard:** Interaktiver WebSocket-basierter Kampftracker für DM & Spieler.
+- [ ] **Interactive Sheet Builder:** Visueller Charakterbogen, Level-Up-Assistent & Drag-and-Drop Inventar.

@@ -1,6 +1,6 @@
 # 🐉 D&D Campaign Manager API
 
-Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backend ermöglicht die Verwaltung von Charakteren, Inventar-Items und Zaubersprüchen inklusive relationaler Verknüpfungen (1:N und N:M) sowie ein vollumfänglich gehärtetes **Authentifizierungs-, Autorisierungs- und Rollensystem (Argon2id, Dual-Token JWT mit HttpOnly Cookies, CORS & OWASP Hardening, Rate Limiting & RBAC)**.
+Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backend ermöglicht die Verwaltung von Charakteren, Inventar-Items und Zaubersprüchen inklusive relationaler Verknüpfungen (1:N und N:M) sowie ein vollumfänglich gehärtetes **Authentifizierungs-, Autorisierungs- und Rollensystem (Argon2id, Dual-Token JWT mit HttpOnly Cookies, CORS & OWASP Hardening, Rate Limiting, RBAC & Structured Observability)**.
 
 ---
 
@@ -11,6 +11,7 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
 * **Reverse Proxy & TLS:** [Caddy](https://caddyserver.com/) (Automatisches TLS/SSL via Let's Encrypt & Reverse Proxying)
 * **Hosting & Cloud:** Contabo Linux VPS (UFW Firewall, Key-only SSH Hardening, Non-Root Deployment User)
 * **CI/CD & Registry:** [GitHub Actions](https://github.com/features/actions) & GitHub Container Registry (`ghcr.io`)
+* **Observability & Logging:** [structlog](https://www.structlog.org/) (Strukturiertes JSON-Logging) & [Sentry](https://sentry.io/) (Error Tracking & Performance Monitoring)
 * **ORM & Validierung:** [SQLModel](https://sqlmodel.tiangolo.com/) (Kombination aus SQLAlchemy 2.0 & Pydantic)
 * **Asynchrone Datenbank:** [PostgreSQL 16](https://www.postgresql.org/) via `asyncpg` & `AsyncSession` (SQLite via `aiosqlite` als Fallback / für Tests)
 * **Sicherheit & Auth:** [PyJWT](https://pyjwt.readthedocs.io/) (Dual-Token: Access & Refresh JWTs) & [pwdlib](https://pwdlib.readthedocs.io/) mit `argon2-cffi` (Argon2id Password Hashing)
@@ -33,13 +34,17 @@ Eine asynchrone, modulare REST-API für Dungeons & Dragons Kampagnen. Das Backen
   * **Passwort-Komplexität:** Pydantic Field-Validator erzwingt Mindestlänge (9 Zeichen), Groß-/Kleinbuchstaben, Zahlen und Sonderzeichen.
   * **Access Token:** Kurzlebiges JWT (15 Minuten Gültigkeit) für API-Zugriffe im `Authorization: Bearer`-Header.
   * **Refresh Token:** Langlebiges JWT (7 Tage Gültigkeit), geschützt in einem **`HttpOnly` Cookie** (`SameSite=lax`) gegen XSS-Angriffe.
+* **Strukturiertes Logging & Observability (`structlog` & Sentry):**
+  * **JSON-Logging:** Maschinell lesbares Log-Format (ISO-Timestamps, Log-Level, Statuscodes, Request-Dauer, Client-IP) auf `stdout` für Cloud-Log-Aggregatoren.
+  * **HTTP Request Middleware:** Automatisches Tracing aller eingehenden Anfragen.
+  * **Error Tracking:** Umgebungsabhängige Sentry-Integration für Ausnahmetelevison und Performance-Monitoring.
 * **Automatisierte CI/CD Pipeline:** GitHub Actions baut bei jedem Push auf `main` das Docker-Image, lädt es in die GitHub Container Registry (`ghcr.io`) und führt einen automatisierten SSH-Rollout auf den VPS durch.
 * **Brute-Force Protection & Rate Limiting:** IP-basierte Begrenzung sensitiver Endpunkte (`/auth/login` auf 5 Requests/Minute) via `slowapi`.
 * **OWASP Security Headers & CORS Hardening:** Granulare CORS-Policies sowie automatische Injektion von Sicherheits-Headern (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`).
 * **Role-Based Access Control (RBAC):** Granulare Rechtevergabe über die `RoleChecker`-Dependency für geschützte Aktionen (`DUNGEON_MASTER` / `ADMIN`).
 * **Clean Architecture & Service Layer:** Strikte Entkopplung von Datenbank-Tabellen (`app/db/models/`), API-DTOs (`app/schemas/`) und der Business-Logik (`app/services/`).
 * **Echtzeit-Healthcheck:** Dedicated `/health`-Endpoint führt eine Live-Verbindungsprüfung (`SELECT 1`) gegen die Datenbank durch.
-* **Automatisierte Test-Suite:** 100 % grün durchlaufende Integrationstests mit `pytest-asyncio` über eine In-Memory Test-Datenbank.
+* **Automatisierte Test-Suite:** 25 grün durchlaufende Integrationstests mit `pytest-asyncio` über eine In-Memory Test-Datenbank.
 
 ---
 
@@ -74,6 +79,7 @@ DND-BACKEND/
 │   │   │   ├── config.py           # Pydantic Settings & Env-Validierung
 │   │   │   ├── exceptions.py       # Custom Domain Exceptions (DNDGameException)
 │   │   │   ├── limiter.py          # Central Rate Limiter Instance (slowapi)
+│   │   │   ├── logging.py          # Structlog-Prozessoren & Sentry-Initialisierung
 │   │   │   ├── middleware.py       # OWASP Security Headers Middleware
 │   │   │   └── security.py         # Argon2 Hashing, Dual-JWT & Auth-Dependencies
 │   │   ├── db/                     # Datenbank-Schicht
@@ -82,6 +88,8 @@ DND-BACKEND/
 │   │   │       ├── item.py         # Item-Tabelle & Enums
 │   │   │       ├── spell.py        # Spell-Tabelle & Link-Tabelle
 │   │   │       └── user.py         # User-Tabelle
+│   │   ├── middleware/             # Anwendungsweite Middleware-Module
+│   │   │   └── logging.py          # Structlog HTTP Request-Logging Middleware
 │   │   ├── schemas/                # Pydantic DTOs & API Request/Response Schemata
 │   │   │   ├── character.py    
 │   │   │   ├── item.py         
@@ -98,11 +106,12 @@ DND-BACKEND/
 │   │   ├── conftest.py             # Pytest Fixtures (In-Memory DB & Async Client)
 │   │   ├── test_auth.py            # Tests für Argon2, Dual-Tokens & Auth-Routen
 │   │   ├── test_characters.py      # Tests für Charakter-Endpunkte & Regelvalidierungen
+│   │   ├── test_observability.py   # Tests für Logging-Middleware & Sentry Guard
 │   │   ├── test_rbac.py            # Tests für Rollenrechte (Player vs. DM)
 │   │   └── test_security.py        # Tests für OWASP-Header, Rate Limiting & Healthcheck
 │   ├── .env.example                # Muster-Datei für Umgebungsvariablen
 │   ├── alembic.ini                 # Hauptkonfiguration für DB-Migrationen
-│   └── requirements.txt            # Abgleich aller Python-Pakete (incl. asyncpg)
+│   └── requirements.txt            # Abgleich aller Python-Pakete (incl. asyncpg, structlog, sentry-sdk)
 │
 ├── .gitignore                      # Ausschluss lokaler Laufzeit-Dateien & DBs
 └── README.md                       # Dokumentation
@@ -116,7 +125,7 @@ DND-BACKEND/
 
 #### 1. Repository klonen & Umgebungsvariablen anlegen
 ```bash
-git clone [https://github.com/DimitrovMikh/dnd-backend.git](https://github.com/DimitrovMikh/dnd-backend.git)
+git clone https://github.com/DimitrovMikh/dnd-backend.git
 cd dnd-backend
 
 # Umgebungsvariablen aus Vorlage kopieren
@@ -256,7 +265,7 @@ pytest
 
 - [x] **Cloud Deployment:** VPS-Setup auf Contabo mit UFW-Firewalling, SSH-Hardening und dediziertem Non-Root Deployment User.
 - [x] **Reverse Proxy & TLS:** Caddy Reverse Proxy Konfiguration für automatisches SSL/TLS-Zertifikatsmanagement via Let's Encrypt.
-- [ ] **Observability:** Structured JSON-Logging (`structlog`) & Error Tracking via Sentry.
+- [x] **Observability:** Structured JSON-Logging (`structlog`) & Error Tracking via Sentry.
 </details>
 
 ---

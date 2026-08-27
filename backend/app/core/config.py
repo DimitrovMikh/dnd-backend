@@ -22,9 +22,12 @@ class Settings(BaseSettings):
     # --- CORS / Security Konfiguration ---
     ALLOWED_ORIGINS: list[str] = ["http://localhost:5173"]
 
+    # Observability
+    SENTRY_DSN: str | None = None
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
 
 
-settings = Settings()   # type: ignore[call-arg]
+settings = Settings()  # type: ignore[call-arg]

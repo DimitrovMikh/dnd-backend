@@ -23,10 +23,7 @@ def validate_spell_learning(character: Character, spell: Spell) -> None:
         raise SpellAlreadyKnownError(spell_name=spell.name)
 
     if spell.lvl > character.lvl:
-        raise SpellLevelTooLowError(
-            character_lvl=character.lvl, spell_lvl=spell.lvl
-        )
-
+        raise SpellLevelTooLowError(character_lvl=character.lvl, spell_lvl=spell.lvl)
 
 
 async def get_all_spells(session: AsyncSession) -> list[Spell]:

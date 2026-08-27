@@ -1,6 +1,7 @@
 """Pytest-Konfiguration und globale Async-Fixtures.
 Stellt eine In-Memory-SQLite-Datenbank und einen Test-Client bereit.
 """
+
 import os
 
 # Überschreibt den Schlüssel auch dann, wenn er als leerer String ("") aus Docker kommt
@@ -51,17 +52,16 @@ async def async_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest_asyncio.fixture
-async def client(
-    async_session: AsyncSession
-) -> AsyncGenerator[AsyncClient, None]:
+async def client(async_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Erstellt einen httpx AsyncClient und überschreibt die get_session-Dependency
     von FastAPI mit der aktuellen Test-Session.
     """
+
     async def get_test_session():
         # Leert den Session-Cache vor jedem Request, damit frische Daten aus der DB geladen werden
         async_session.expire_all()
         yield async_session
-    
+
     # FastAPI-Dependency Override aktivieren
     app.dependency_overrides[get_session] = get_test_session
 

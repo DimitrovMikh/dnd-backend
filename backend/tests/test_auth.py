@@ -108,8 +108,7 @@ async def test_login_user_wrong_password(client):
     assert response.status_code == 401
     data = response.json()
     assert (
-        data["detail"]
-        == "Ungültige Anmeldedaten (Benutzername oder Passwort falsch)."
+        data["detail"] == "Ungültige Anmeldedaten (Benutzername oder Passwort falsch)."
     )
 
 
@@ -128,8 +127,7 @@ async def test_login_user_not_found(client):
     assert response.status_code == 401
     data = response.json()
     assert (
-        data["detail"]
-        == "Ungültige Anmeldedaten (Benutzername oder Passwort falsch)."
+        data["detail"] == "Ungültige Anmeldedaten (Benutzername oder Passwort falsch)."
     )
 
 
@@ -234,9 +232,7 @@ async def test_refresh_token_invalid_type(client):
     mit HTTP 401 abgefangen wird.
     """
     # Access Token (type: access) als mehere Refresh Token Cookie setzen
-    access_token = create_access_token(
-        data={"sub": "fakeuser", "role": "player"}
-    )
+    access_token = create_access_token(data={"sub": "fakeuser", "role": "player"})
 
     client.cookies.update({"refresh_token": access_token})
     response = await client.post("/auth/refresh")
@@ -247,7 +243,7 @@ async def test_refresh_token_invalid_type(client):
 
 @pytest.mark.asyncio
 async def test_register_user_weak_password(client):
-    """ Prüft, ob die Registrierung bei einem schwachen Passwort mit HTTP 422 abgelehnt wird."""
+    """Prüft, ob die Registrierung bei einem schwachen Passwort mit HTTP 422 abgelehnt wird."""
     payload = {
         "username": "weakuser",
         "email": "weak@example.com",

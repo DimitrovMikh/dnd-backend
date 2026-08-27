@@ -1,6 +1,7 @@
 """Integrationstests für die Character-Endpoints.
 Prüft die API-Routen, D&D-Regelvalidierungen und Fehlermeldungen.
 """
+
 import pytest
 from app.db.models.character import Character
 from app.db.models.spell import Spell
@@ -19,7 +20,7 @@ async def test_learn_spell_level_too_low(client, async_session):
         stat_con=12,
         stat_int=16,
         stat_wis=10,
-        stat_cha=12
+        stat_cha=12,
     )
     spell = Spell(name="Wunsch", lvl=9, school="verwandlung")
 
@@ -51,7 +52,7 @@ async def test_learn_spell_success(client, async_session):
         stat_con=12,
         stat_int=18,
         stat_wis=10,
-        stat_cha=12
+        stat_cha=12,
     )
     spell = Spell(name="Licht", lvl=1, school="verwandlung")
 
@@ -85,7 +86,7 @@ async def test_learn_spell_already_known(client, async_session):
         stat_con=8,
         stat_int=16,
         stat_wis=10,
-        stat_cha=12
+        stat_cha=12,
     )
     spell = Spell(name="Licht", lvl=1, school="verwandlung")
 

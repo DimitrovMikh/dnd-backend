@@ -20,9 +20,7 @@ async def get_user_by_username_or_email(
     session: AsyncSession, username: str, email: str
 ) -> User | None:
     """Sucht nach einem existierenden Benutzer mit gleichem Benutzernamen oder gleicher E-Mail."""
-    statement = select(User).where(
-        (User.username == username) | (User.email == email)
-    )
+    statement = select(User).where((User.username == username) | (User.email == email))
     result = await session.exec(statement)
     return result.first()
 

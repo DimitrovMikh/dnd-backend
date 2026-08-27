@@ -13,14 +13,12 @@ engine = create_async_engine(DATABASE_URL, echo=True)
 
 # Session Factory: expire_on_commit=False verhindert Detached-Instance-Fehler nach commits
 async_session_maker = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+    engine, class_=AsyncSession, expire_on_commit=False
 )
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """FastAPI Dependency Injector: Stellt eine asynchrone Datenbank-Session bereit 
+    """FastAPI Dependency Injector: Stellt eine asynchrone Datenbank-Session bereit
     und schließt diese nach dem Request automatisch (yield pattern).
     """
 

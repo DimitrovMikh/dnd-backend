@@ -22,5 +22,5 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         # Steuert, welche Referrer-Informationen bei externen Links mitgesendet werden
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        
+
         return response

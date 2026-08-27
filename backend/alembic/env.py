@@ -2,6 +2,7 @@
 Verbindet Alembic mit den SQLModel-Metadaten und stellt den
 asynchronen Migrationsablauf für SQLite und PostgreSQL bereit.
 """
+
 import asyncio
 import os
 from logging.config import fileConfig

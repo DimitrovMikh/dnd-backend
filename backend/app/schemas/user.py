@@ -14,12 +14,8 @@ class UserBase(SQLModel):
     username: str = Field(
         unique=True, index=True, description="Eindeutiger Benutzername"
     )
-    email: str = Field(
-        unique=True, index=True, description="Eindeutige E-Mail-Adresse"
-    )
-    is_active: bool = Field(
-        default=True, description="Status, ob das Konto aktiv ist"
-    )
+    email: str = Field(unique=True, index=True, description="Eindeutige E-Mail-Adresse")
+    is_active: bool = Field(default=True, description="Status, ob das Konto aktiv ist")
     role: UserRole = Field(
         default=UserRole.PLAYER, description="Rolle des Benutzers im System"
     )
@@ -42,9 +38,7 @@ class UserCreate(UserBase):
         """
         # 1. Mindestlänge prüfen (mindestens 9 Zeichen)
         if len(v) < 9:
-            raise ValueError(
-                "Das Passwort muss mindestens 9 Zeichen lang sein."
-            )
+            raise ValueError("Das Passwort muss mindestens 9 Zeichen lang sein.")
 
         # 2. Mindestens ein Großbuchstabe (A-Z)
         if not re.search(r"[A-Z]", v):
@@ -60,9 +54,7 @@ class UserCreate(UserBase):
 
         # 4. Mindestens eine Zahl (0-9)
         if not re.search(r"\d", v):
-            raise ValueError(
-                "Das Passwort muss mindestens eine Zahl enthalten."
-            )
+            raise ValueError("Das Passwort muss mindestens eine Zahl enthalten.")
 
         # 5. Mindestens ein Sonderzeichen (alles außer Alphanumerisch)
         if not re.search("[^a-zA-Z0-9]", v):
@@ -91,9 +83,7 @@ class UserLogin(SQLModel):
 class Token(SQLModel):
     """Schema für die JWT-Response nach erfolgreichem Login."""
 
-    access_token: str = Field(
-        description="Signierter JWT Access Token String"
-    )
+    access_token: str = Field(description="Signierter JWT Access Token String")
     token_type: str = Field(
         default="bearer", description="OAuth2 Token-Typ (Standard: bearer)"
     )

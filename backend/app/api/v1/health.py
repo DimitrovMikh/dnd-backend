@@ -21,16 +21,14 @@ async def health_check(session: Annotated[AsyncSession, Depends(get_session)]):
         db_alive = result.first() is not None
         if not db_alive:
             raise HTTPException(
-                status_code=503, 
-                detail="Datenbank hat keine Antwort geliefert."
+                status_code=503, detail="Datenbank hat keine Antwort geliefert."
             )
     except SQLAlchemyError:
         # Reagiert mit HTTP 503 (Service Unavailable), falls die Datenbank ausfällt oder blockiert ist
         raise HTTPException(
-            status_code=503, 
-            detail="Datenbankverbindung fehlgeschlagen"
+            status_code=503, detail="Datenbankverbindung fehlgeschlagen"
         )
-    
+
     # Erfolgreicher System-Status bei funktionierender Datenbank-Verbindung
     return {
         "status": "healthy",

@@ -20,15 +20,9 @@ class User(SQLModel, table=True):
     username: str = Field(
         unique=True, index=True, description="Eindeutiger Benutzername"
     )
-    email: str = Field(
-        unique=True, index=True, description="Eindeutige E-Mail-Adresse"
-    )
-    is_active: bool = Field(
-        default=True, description="Status, ob das Konto aktiv ist"
-    )
+    email: str = Field(unique=True, index=True, description="Eindeutige E-Mail-Adresse")
+    is_active: bool = Field(default=True, description="Status, ob das Konto aktiv ist")
     role: UserRole = Field(
         default=UserRole.PLAYER, description="Rolle des Benutzers im System"
     )
-    hashed_password: str = Field(
-        description="Argon2/Bcrypt-Hash des Benutzerpassworts"
-    )
+    hashed_password: str = Field(description="Argon2/Bcrypt-Hash des Benutzerpassworts")

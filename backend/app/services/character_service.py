@@ -13,20 +13,15 @@ from app.services.spell_service import validate_spell_learning
 
 async def get_all_characters(session: AsyncSession) -> list[Character]:
     """Ruft alle Charaktere aus der Datenbank ab (inkl. Eager Loading von items und spells)."""
-    statement = (
-        select(Character)
-        .options(
-            selectinload(Character.items),  # type: ignore[arg-type]
-            selectinload(Character.spells), # type: ignore[arg-type]
-        )
+    statement = select(Character).options(
+        selectinload(Character.items),  # type: ignore[arg-type]
+        selectinload(Character.spells),  # type: ignore[arg-type]
     )
     results = await session.exec(statement)
     return list(results.all())
 
 
-async def get_character_by_id(
-    session: AsyncSession, character_id: int
-) -> Character:
+async def get_character_by_id(session: AsyncSession, character_id: int) -> Character:
     """Ruft einen einzelnen Charakter anhand seiner ID ab.
 
     Raises:
@@ -37,7 +32,7 @@ async def get_character_by_id(
         .where(Character.id == character_id)
         .options(
             selectinload(Character.items),  # type: ignore[arg-type]
-            selectinload(Character.spells), # type: ignore[arg-type]
+            selectinload(Character.spells),  # type: ignore[arg-type]
         )
     )
     result = await session.exec(statement)
@@ -75,7 +70,7 @@ async def learn_spell_for_character(
     statement = (
         select(Character)
         .where(Character.id == character_id)
-        .options(selectinload(Character.spells))    # type: ignore[arg-type]
+        .options(selectinload(Character.spells))  # type: ignore[arg-type]
     )
     result = await session.exec(statement)
     db_character = result.first()
@@ -90,8 +85,6 @@ async def learn_spell_for_character(
 
     validate_spell_learning(db_character, db_spell)
 
-    new_link = CharacterSpellLink(
-        character_id=character_id, spell_id=spell_id
-    )
+    new_link = CharacterSpellLink(character_id=character_id, spell_id=spell_id)
     session.add(new_link)
     await session.commit()

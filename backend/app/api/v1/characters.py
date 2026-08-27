@@ -1,6 +1,7 @@
 """API Router für Charaktere.
 Stellt Endpunkte für CRUD-Operationen und D&D-Regellogik (Zauber lernen) bereit.
 """
+
 from typing import Annotated
 
 from app.database import get_session
@@ -46,9 +47,7 @@ async def learn_spell(
     """Verknüpft einen Charakter mit einem Zauberspruch über die N:M-Link-Tabelle,
     nachdem alle D&D-Regeln im Service geprüft wurden.
     """
-    await character_service.learn_spell_for_character(
-        db, character_id, spell_id
-    )
+    await character_service.learn_spell_for_character(db, character_id, spell_id)
     return {
         "message": f"Character {character_id} hat Zauberspruch {spell_id} erfolgreich gelernt!"
     }

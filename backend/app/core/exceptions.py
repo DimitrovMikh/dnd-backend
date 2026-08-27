@@ -1,6 +1,7 @@
 """Zentrales Fehlersystem für Domain Exceptions (Fachliche D&D-Regelverstöße).
 Alle spezifischen Fehler erben von DNDGameException.
 """
+
 from fastapi import status
 
 
@@ -29,18 +30,12 @@ class SpellLevelTooLowError(DNDGameException):
             f"Charakter-Level ({character_lvl}) ist zu niedrig für diesen "
             f"Zauberspruch (Level {spell_lvl})."
         )
-        super().__init__(
-            message=custom_message,
-            error_code="SPELL_LEVEL_TOO_LOW"
-        )
+        super().__init__(message=custom_message, error_code="SPELL_LEVEL_TOO_LOW")
 
 
 class SpellAlreadyKnownError(DNDGameException):
     """Wird geworfen, wenn ein Charakter einen Zauberspruch bereits gelernt hat."""
 
-    def __init__(self, spell_name: str):        
+    def __init__(self, spell_name: str):
         custom_message = f"Der Zauberspruch '{spell_name}' ist bereits bekannt."
-        super().__init__(
-            message=custom_message,
-            error_code="SPELL_ALREADY_KNOWN"
-        )
+        super().__init__(message=custom_message, error_code="SPELL_ALREADY_KNOWN")

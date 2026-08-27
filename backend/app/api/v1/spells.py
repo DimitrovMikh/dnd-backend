@@ -1,6 +1,7 @@
 """API Router für Zaubersprüche.
 Stellt CRUD-Endpunkte für das Verwalten von Zaubersprüchen bereit.
 """
+
 from typing import Annotated
 
 from app.core.security import RoleChecker

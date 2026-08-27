@@ -15,9 +15,7 @@ class CharacterSpellLink(SQLModel, table=True):
     character_id: int | None = Field(
         default=None, foreign_key="character.id", primary_key=True
     )
-    spell_id: int | None = Field(
-        default=None, foreign_key="spell.id", primary_key=True
-    )
+    spell_id: int | None = Field(default=None, foreign_key="spell.id", primary_key=True)
 
 
 class SpellSchool(str, Enum):

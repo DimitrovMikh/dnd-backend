@@ -1,6 +1,7 @@
 """Haupt-Einstiegspunkt der FastAPI-Anwendung.
 Registriert Middleware, Exception-Handler, Lifespan-Hooks und API-Router.
 """
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -18,7 +19,9 @@ from app.api.v1.spells import router as spells_router
 from app.core.config import settings
 from app.core.exceptions import DNDGameException
 from app.core.limiter import limiter
+from app.core.logging import init_sentry, setup_logging
 from app.core.middleware import SecurityHeadersMiddleware
+from app.middleware.logging import logging_middleware
 
 
 @asynccontextmanager
@@ -30,7 +33,14 @@ async def lifespan(app: FastAPI):
     yield
 
 
+# Observability & Logging vor der App-Instanziierung aufsetzen
+setup_logging()
+init_sentry(dsn=settings.SENTRY_DSN, environment=settings.ENVIRONMENT)
+
 app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
+
+# Middleware für strukturiertes HTTP-Request-Logging registrieren
+app.middleware("http")(logging_middleware)
 
 # --- RATE LIMITER CONFIGURATION (slowapi) ---
 # Registriert die Limiter-Instanz im App-State für routenbasierte Zugriffsbeschränkungen
@@ -52,9 +62,11 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,  # Strikte Herkunftskontrolle (kein Wildcard)
-    allow_credentials=True,                  # Erlaubt das Übertragen von HttpOnly Refresh-Cookies
-    allow_methods=["*"],                     # Erlaubt alle Standard-HTTP-Methoden (GET, POST, etc.)
-    allow_headers=["*"],                     # Erlaubt alle gängigen HTTP-Header (Authorization, Content-Type)
+    allow_credentials=True,  # Erlaubt das Übertragen von HttpOnly Refresh-Cookies
+    allow_methods=["*"],  # Erlaubt alle Standard-HTTP-Methoden (GET, POST, etc.)
+    allow_headers=[
+        "*"
+    ],  # Erlaubt alle gängigen HTTP-Header (Authorization, Content-Type)
 )
 
 

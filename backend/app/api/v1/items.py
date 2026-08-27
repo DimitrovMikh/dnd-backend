@@ -1,6 +1,7 @@
 """API Router für Gegenstände / Items.
 Stellt CRUD-Endpunkte für das Erstellen und Abrufen von Items bereit.
 """
+
 from typing import Annotated
 
 from app.core.security import RoleChecker

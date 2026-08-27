@@ -1,4 +1,3 @@
-
 from sqlmodel import Field, SQLModel
 
 from app.db.models.item import ItemRarity
@@ -21,7 +20,6 @@ class ItemBase(SQLModel):
 
 class ItemCreate(ItemBase):
     """Pydantic-Schema zur Validierung eingehender POST-Requests beim Erstellen von Items."""
-
 
 
 class ItemResponse(ItemBase):

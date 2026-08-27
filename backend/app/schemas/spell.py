@@ -15,7 +15,6 @@ class SpellCreate(SpellBase):
     """Pydantic-Schema für die Erstellung neuer Zaubersprüche."""
 
 
-
 class SpellResponse(SpellBase):
     """Pydantic-Schema für API-Antworten von Zaubersprüchen."""
 

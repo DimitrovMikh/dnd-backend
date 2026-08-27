@@ -1,4 +1,3 @@
-
 from sqlmodel import Field, SQLModel
 
 from app.schemas.item import ItemResponse
@@ -23,7 +22,6 @@ class CharacterBase(SQLModel):
 
 class CharacterCreate(CharacterBase):
     """Pydantic-Schema für eingehende POST-Requests zur Erstellung eines Charakters."""
-
 
 
 class CharacterResponse(CharacterBase):

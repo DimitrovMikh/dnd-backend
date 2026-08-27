@@ -10,8 +10,7 @@ async def test_cors_allowed_origin(client):
 
     assert response.status_code == 200
     assert (
-        response.headers.get("access-control-allow-origin")
-        == "http://localhost:5173"
+        response.headers.get("access-control-allow-origin") == "http://localhost:5173"
     )
     assert response.headers.get("access-control-allow-credentials") == "true"
 
@@ -73,4 +72,4 @@ async def test_database_healthcheck_success(client):
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
-    assert data["database"] == "connected"
+    assert data["database"] == "connected"

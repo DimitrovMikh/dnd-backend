@@ -25,3 +25,7 @@ httpx==0.28.1
 # CI/CD Pipeline
 ruff==0.3.0
 mypy==1.8.0
+
+# Observability & Logs
+sentry-sdk[fastapi]~=2.13.0
+structlog~=24.2.0

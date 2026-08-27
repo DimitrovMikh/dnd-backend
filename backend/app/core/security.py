@@ -36,9 +36,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # --- JWT TOKEN GENERIERUNG ---
 
 
-def create_access_token(
-    data: dict, expire_delta: timedelta | None = None
-) -> str:
+def create_access_token(data: dict, expire_delta: timedelta | None = None) -> str:
     """Erstellt ein digital signiertes JSON Web Token (JWT).
 
     :param data: Dictionary mit den Payload-Daten (z. B. 'sub' für Username & 'role').
@@ -62,9 +60,7 @@ def create_access_token(
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
-def create_refresh_token(
-    data: dict, expire_delta: timedelta | None = None
-) -> str:
+def create_refresh_token(data: dict, expire_delta: timedelta | None = None) -> str:
     """Erstellt ein langlebiges Refresh Token (JWT) zur Erneuerung des Access Tokens.
 
     :param data: Dictionary mit den Payload-Daten (z. B. 'sub' für Username).
@@ -106,7 +102,9 @@ async def get_current_user(
 
     try:
         # 1. JWT entschlüsseln und Signatur sowie 'exp'-Claim prüfen
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
         username: str | None = payload.get("sub")
 
         if not username:
@@ -143,7 +141,9 @@ class RoleChecker:
     def __init__(self, allowed_roles: list[UserRole]):
         self.allowed_roles = allowed_roles
 
-    def __call__(self, current_user: Annotated[User, Depends(get_current_user)]) -> User:
+    def __call__(
+        self, current_user: Annotated[User, Depends(get_current_user)]
+    ) -> User:
         """Prüft, ob die Rolle des aktuellen Benutzers in der Liste der erlaubten Rollen enthalten ist.
 
         :raises HTTPException: Status 403 FORBIDDEN, wenn die Rolle nicht ausreicht.

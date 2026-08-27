@@ -23,15 +23,12 @@ async def test_create_spell_as_player_forbidden(client):
     # 2. Versuchen, einen Spell mit Player-Token zu erstellen
     spell_payload = {"name": "Feuerball", "lvl": 3, "school": "hervorrufung"}
     headers = {"Authorization": f"Bearer {token}"}
-    response = await client.post(
-        "/spells/", json=spell_payload, headers=headers
-    )
+    response = await client.post("/spells/", json=spell_payload, headers=headers)
 
     # 3. Assert: 403 Forbidden
     assert response.status_code == 403
     assert (
-        response.json()["detail"]
-        == "Zugriff verweigert: Unzureichende Berechtigungen."
+        response.json()["detail"] == "Zugriff verweigert: Unzureichende Berechtigungen."
     )
 
 
@@ -57,9 +54,7 @@ async def test_create_spell_as_dungeon_master_success(client):
     # 2. Spell als DM erstellen
     spell_payload = {"name": "Heilendes Wort", "lvl": 1, "school": "bannmagie"}
     headers = {"Authorization": f"Bearer {token}"}
-    response = await client.post(
-        "/spells/", json=spell_payload, headers=headers
-    )
+    response = await client.post("/spells/", json=spell_payload, headers=headers)
 
     # 3. Assert: 201 Created
     assert response.status_code == 201
